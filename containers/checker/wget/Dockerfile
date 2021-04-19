@@ -1,0 +1,17 @@
+FROM alpine:3.13
+
+RUN apk add --no-cache bash
+RUN apk add --no-cache wget
+
+ENV TIMEOUT=30
+ENV IGNORE_CERTIFICATES=1
+ENV START_DELAY_SECS=10
+ENV MAX_RETRIES=10
+ENV RETRY_INTERVAL_SECS=10
+ENV SHOW_PAGE_CONTENT=0
+ENV URL="TO_BE_PROVIDED"
+ENV EXPECTED_RESPONSE_TEXT=""
+
+ADD /check.sh /katapult/
+WORKDIR /workspace
+ENTRYPOINT ["/katapult/check.sh"]

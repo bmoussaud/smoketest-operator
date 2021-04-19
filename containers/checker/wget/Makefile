@@ -1,0 +1,14 @@
+IMAGE_NAME=katapult/checker-wget
+IMAGE_VERSION=0.0.1
+IMAGE=$(IMAGE_NAME):$(IMAGE_VERSION)
+REGISTRY=localregistry:5000
+
+build:
+	SOURCE_BRANCH=v0.0.1 DOCKERFILE_PATH=. IMAGE_NAME=$(IMAGE) ./build.sh
+
+push: build 
+	docker tag $(IMAGE) $(REGISTRY)/$(IMAGE)
+	docker push $(REGISTRY)/$(IMAGE)
+
+docker-run: build
+	docker run --rm -e EXPECTED_RESPONSE_TEXT="html" -e RETRY_INTERVAL_SECS=1 -e START_DELAY_SECS=1 -e URL=http://www.google.benoit/ -e SHOW_PAGE_CONTENT=0   $(IMAGE) 
