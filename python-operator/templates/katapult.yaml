@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: katapulted
+  namespace: default
+spec:
+  #activeDeadlineSeconds: 30
+  #ttlSecondsAfterFinished: 30
+  template:
+    spec:
+      serviceAccountName: katapult-executor-sa
+      restartPolicy: Never
+      volumes:
+        #- name: input-workspace
+        #  emptyDir: {}
+        - name: workspace
+          emptyDir: {}   
+        - name: generated
+          emptyDir: {}   
+      containers:
+        - name: myapp-container
+          image: busybox:1.28
+          command: ["sh", "-c", "echo The app has been katapulted !!!"]
+          volumeMounts:
+            - name: workspace
+              mountPath: /immutable_workspace
+      initContainers:
+        - name: loader
+          image: localregistry:5000/katapult/loader-kubectl-get:0.0.2
+          imagePullPolicy: Always          
+          env:
+            - name: NAMESPACE
+              value: XX-NAMESPACE-XX
+            - name: NAME
+              value: XX-NAME-XX
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+        - name: generator
+          image: localregistry:5000/katapult/generator-ytt:0.0.2
+          imagePullPolicy: Always
+          command: ["/katapult/generate.sh"]
+          env:
+            - name: PROFILE
+              value: simple            
+            - name: SLEEP
+              value: "1"
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: generated
+              mountPath: /workspace/output
+        - name: executor
+          image: localregistry:5000/katapult/executor-kubectl-apply:0.0.0
+          imagePullPolicy: Always
+          command: ["/katapult/execute.sh"]
+          env:
+            - name: NAMESPACE
+              value: mydemo
+          volumeMounts:
+            - name: generated
+              mountPath: /workspace/output
+        - name: checker
+          image: localregistry:5000/katapult/checker-wget:0.0.0
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: checker-wget-parameters                
+          

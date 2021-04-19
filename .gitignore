@@ -1,0 +1,4 @@
+.DS_Store
+python-operator/__pycache__
+python-operator/jobrunner/__pycache__/
+*.pyc
