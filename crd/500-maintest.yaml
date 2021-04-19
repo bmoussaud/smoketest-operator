@@ -1,0 +1,9 @@
+apiVersion: katapult.org/v1alpha1
+kind: SmokeTest
+metadata:
+  name: main-test
+  namespace: katapulted-crd
+spec: 
+  url: http://www.google.fr
+  expectedResponseText: html
+    
