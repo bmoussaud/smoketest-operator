@@ -3,11 +3,13 @@ deploy-crd:
 	kubectl apply -f crd/300-katapulted-crd.yaml
 	kubectl api-resources --api-group katapult.org
 	
-deploy-sample:
+deploy-sample:	
 	kubectl apply -f crd/500-maintest.yaml
-	kubectl describe smoketests.katapult.org main-test  -n katapulted-crd
+	kubectl describe smoketests.katapult.org main-test  -n smok
 	
+undeploy-sample:
+	kubectl delete -f crd/500-maintest.yaml
 	
 undeploy:
 	#kubectl patch katapulteds.katapult.org katapulted-sample  -n katapulted-crd -p '{"metadata": {"finalizers": []}}' --type merge
-	kubectl delete -f crd
+	kubectl delete -f smok

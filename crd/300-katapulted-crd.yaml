@@ -29,4 +29,13 @@ spec:
                 url:
                   type: string
                 expectedResponseText:
-                  type: string                
+                  type: string   
+                retryIntervalSeconds:
+                  type: integer
+                startDelaySeconds:
+                  type: integer
+                timeout:
+                  type: integer
+                showPageContent:
+                  type: boolean
+

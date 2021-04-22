@@ -2,8 +2,12 @@ apiVersion: katapult.org/v1alpha1
 kind: SmokeTest
 metadata:
   name: main-test
-  namespace: katapulted-crd
+  namespace: smok
 spec: 
-  url: http://www.google.fr
-  expectedResponseText: html
+  url: http://back.mytanzu.xyz/dogs
+  expectedResponseText: Total
+  retryIntervalSeconds: 2
+  startDelaySeconds: 4
+  showPageContent: true
+  timeout: 10
     
