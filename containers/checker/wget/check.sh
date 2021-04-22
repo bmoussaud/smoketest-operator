@@ -1,10 +1,10 @@
 #!/bin/sh
-PREFIX="### CHECKER WGET"
-echo "${PREFIX} go"
+PREFIX="### SMOKE WGET"
+echo "${PREFIX} go !"
 
-if [ $START_DELAY_SECS -ne 0 ]; then
-echo Waiting $START_DELAY_SECS seconds
-sleep $START_DELAY_SECS
+if [ ${START_DELAY_SECS} -ne 0 ]; then
+echo "Waiting for ${START_DELAY_SECS} seconds"
+sleep ${START_DELAY_SECS}
 fi
 
 for i in `seq 1 $MAX_RETRIES`
@@ -12,21 +12,23 @@ do
 RESPONSE_FILE=/tmp/http-response.$$
 rm -f $RESPONSE_FILE
 
-wgetCmdLine="wget --timeout=${TIMEOUT} -O $RESPONSE_FILE ${URL}"
+WGET_CMD_LINE="wget --timeout=${TIMEOUT} -O $RESPONSE_FILE ${URL}"
 
-echo "Executing ${wgetCmdLine}"
-${wgetCmdLine}
+echo "Executing ${WGET_CMD_LINE}"
+${WGET_CMD_LINE}
 
 WGET_EXIT_CODE=$?
 if [ $WGET_EXIT_CODE -eq 0 ]; then
 break
 fi
-sleep $RETRY_INTERVAL_SECS
+
+echo "Waiting for ${RETRY_INTERVAL_SECS} seconds"
+sleep ${RETRY_INTERVAL_SECS}
 done
 
-if [ $WGET_EXIT_CODE -ne 0 ]; then
+if [ ${WGET_EXIT_CODE} -ne 0 ]; then
 echo "ERROR: ${URL} returned non-200 response code (${WGET_EXIT_CODE})"
-exit $WGET_EXIT_CODE
+exit ${WGET_EXIT_CODE}
 fi
 
 if [ $SHOW_PAGE_CONTENT -ne 0 ]; then

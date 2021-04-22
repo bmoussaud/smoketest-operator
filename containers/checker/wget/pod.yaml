@@ -2,11 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: checker-wget-parameters-test
-  namespace: default
+  name: checker-wget-parameters-test  
 data:
-  URL: http://ihm-service.mydemo:80
-  EXPECTED_RESPONSE_TEXT: Gui MicroPets
+  URL: http://back.mytanzu.benoit/dogs
+  EXPECTED_RESPONSE_TEXT: BENOIT
   RETRY_INTERVAL_SECS: "2"
   START_DELAY_SECS: "4"
   SHOW_PAGE_CONTENT: "1"
@@ -16,12 +15,11 @@ data:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: katapult-checker
-  namespace: default
+  name: smoke-tester-pod  
 spec:
   containers:
     - name: checker
-      image: registry.local:5000/katapult/checker-wget:0.0.0
+      image: docker.io/katapulted/checker-wget:0.0.1
       imagePullPolicy: Always
       envFrom:
         - configMapRef:
