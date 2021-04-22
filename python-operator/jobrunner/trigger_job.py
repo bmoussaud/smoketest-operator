@@ -15,13 +15,15 @@ class JobRunner:
         self.namespace = namespace
         self.logger = logging.getLogger('trigger_job')
         self.logger.setLevel(logging.DEBUG)
-        self.template_katapult = "templates/katapult.yaml"
-        self.template_unkatapult = "templates/unkatapult.yaml"
+        self.template_job = "templates/job.yaml"
         self.template_cm = "templates/configuration.yaml"
         self.job_namespace = "smok"
         self.resource_prefix = "st"
 
     def config_map_name(self):
+        return f"{self.resource_prefix}-cm-{self.namespace}-{self.name}"
+
+    def job_name(self):
         return f"{self.resource_prefix}-cm-{self.namespace}-{self.name}"
 
     def deploy_configuration(self, spec):
@@ -37,7 +39,7 @@ class JobRunner:
             cm_spec['data']['SHOW_PAGE_CONTENT'] = str(spec['showPageContent'])
             cm_spec['metadata']['name'] = self.config_map_name()
 
-            self.logger.debug(f"store_as_cm {cm_spec}")
+            self.logger.debug(f"cm_spec {cm_spec}")
             api = kubernetes.client.CoreV1Api()
             api.create_namespaced_config_map(
                 body=cm_spec, namespace=self.job_namespace)
@@ -47,61 +49,47 @@ class JobRunner:
         api.delete_namespaced_config_map(
             name=self.config_map_name(), namespace=self.job_namespace)
 
-    def katapult(self, resource_name: str, resource_namespace: str):
-        job_name = f'katapult-{resource_namespace}-{resource_name}'
-        self._trigger_job(self.template_katapult, job_name,
-                          resource_name, resource_namespace)
-        return job_name
-
-    def unkatapult(self, resource_name: str, resource_namespace: str):
-        job_name = f'unkatapult-{resource_namespace}-{resource_name}'
-        self._trigger_job(self.template_unkatapult, job_name,
-                          resource_name, resource_namespace)
-        return job_name
-
-    def _trigger_job(self, path: str, job_name: str, resource_name: str, resource_namespace: str):
+    def trigger_job(self):
         kubernetes.config.load_kube_config()  # developer's config files
         self.logger.debug("Client is configured via kubeconfig file.")
-        self.logger.debug(path)
-        with open(path) as f:
-            job_spec = yaml.safe_load(f)
-            initContainers = job_spec['spec']['template']['spec']['initContainers']
-            for container in initContainers:
-                if 'loader' in container['name']:
-                    container['env'] = [{'name': 'NAMESPACE', 'value': resource_namespace}, {
-                        'name': 'NAME', 'value': resource_name}]
-                    env = container['env']
-                    self.logger.debug(f'patched ENV {env}')
-                self.logger.debug(f'container {container}')
-            self.logger.debug('-----')
+        self.logger.debug(self.template_job)
+        with open(self.template_job) as f:
+            content = f.read()
+            new_content = content.replace(
+                "CONFIG_REF_NAME", self.config_map_name())
+            job_spec = yaml.safe_load(new_content)
+            job_spec['metadata']['name'] = self.job_name()
 
-            job_spec['metadata']['name'] = job_name
+            self.logger.debug(f"job_spec {job_spec}")
 
             # Make it our child: assign the namespace, name, labels, owner references, etc.
             # kopf.adopt(job_spec)
 
-            batch_api = kubernetes.client.BatchV1Api()
-            jobs = batch_api.list_namespaced_job(namespace=self.job_namespace)
-            job = next(
-                (j for j in jobs.items if j.metadata.name == job_name), None)
-            if not job:
-                self.logger.debug("{0} not found".format(job_name))
-            else:
-                self.logger.debug("{0} not found, delete it".format(job_name))
-                self.logger.debug('delete job {0}'.format(job_name))
-                batch_api.delete_namespaced_job(
-                    name=job_name, namespace=self.job_namespace)
-                self.logger.debug("sleep 5 sec")
-                time.sleep(5)
-
             try:
+                batch_api = kubernetes.client.BatchV1Api()
                 batch_api.create_namespaced_job(
                     body=job_spec, namespace=self.job_namespace)
-                self.logger.debug("Job created. status='%s'" % job_name)
+                self.logger.debug(f"Job created. status='{self.job_name()}'")
+                return self.job_name()
             except ApiException as e:
                 self.logger.debug(
                     "Exception when calling AppsV1Api->create_namespaced_job: %s\n" % e)
+            
 
+    def delete_job(self):
+        batch_api = kubernetes.client.BatchV1Api()
+        jobs = batch_api.list_namespaced_job(namespace=self.job_namespace)
+        job = next(
+            (j for j in jobs.items if j.metadata.name == self.job_name()), None)
+        if not job:
+            self.logger.debug("{0} not found".format(job_name))
+        else:
+            self.logger.debug("{0} found, delete it".format(self.job_name()))
+            self.logger.debug('delete job {0}'.format(self.job_name()))
+            batch_api.delete_namespaced_job(
+                name=self.job_name(), namespace=self.job_namespace)
+            self.logger.debug("sleep 5 sec")
+            time.sleep(5)
 
 def standalone_new_logger():
     logger = logging.getLogger('trigger_job')
@@ -124,6 +112,6 @@ def standalone_new_logger():
 
 if __name__ == "__main__":
     standalone_new_logger()
-    runner = JobRunner()
+    #runner = JobRunner()
     # runner.katapult("katapulted-sample","katapulted-crd")
-    runner.unkatapult("katapulted-sample", "katapulted-crd")
+    # runner.unkatapult("katapulted-sample", "katapulted-crd")

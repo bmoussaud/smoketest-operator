@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke-tester-job  
+spec:
+  backoffLimit: 4  
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test-runner
+          image: docker.io/katapulted/checker-wget:0.0.1
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: CONFIG_REF_NAME          

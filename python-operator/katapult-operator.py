@@ -11,15 +11,11 @@ def login_fn(**kwargs):
 @kopf.on.create('smoketests')
 def create_smoketest(body, meta, spec, namespace, status, **kwargs):
     print(f"CREATE create_smoketests")
-    ns = meta['namespace']
-    name = meta['name']
-    url = spec['url']
-    runner = JobRunner(meta['namespace'],meta['name'])
+    runner = JobRunner(namespace, meta['name'])
     runner.deploy_configuration(spec)
-
-    ##job_name = runner.katapult(name,ns)
-    job_name = f"{ns}/{name}"
-    job_description = f"Check if '{url}' is available"
+    job_name = runner.trigger_job()
+    
+    job_description = f"Check if '{spec['url']}' is available"
     kopf.info(body, reason='Created',
               message=f"Start '{job_name}' job: {job_description}'")
     return {'job-name': job_name, 'job-description': job_description}
@@ -28,6 +24,6 @@ def create_smoketest(body, meta, spec, namespace, status, **kwargs):
 @kopf.on.delete('smoketests')
 def delete_smoketest(body, meta, spec, namespace, status, **kwargs):
     print(f"DELETE create_smoketests")
-    runner = JobRunner(meta['namespace'],meta['name'])
+    runner = JobRunner(namespace, meta['name'])
+    runner.delete_job()
     runner.undeploy_configuration()
-
