@@ -8,8 +8,9 @@ deploy-sample:
 	kubectl describe smoketests.katapult.org main-test  -n smok
 	
 undeploy-sample:
+	#kubectl patch smoketests.katapult.org main-test  -n smok -p '{"metadata": {"finalizers": []}}' --type merge
 	kubectl delete -f crd/500-maintest.yaml
 	
 undeploy:
 	#kubectl patch katapulteds.katapult.org katapulted-sample  -n katapulted-crd -p '{"metadata": {"finalizers": []}}' --type merge
-	kubectl delete -f smok
+	kubectl delete -f crd
