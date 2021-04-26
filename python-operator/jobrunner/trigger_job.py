@@ -35,6 +35,7 @@ class JobRunner:
                 spec['retryIntervalSeconds'])
             cm_spec['data']['START_DELAY_SECS'] = str(
                 spec['startDelaySeconds'])
+            cm_spec['data']['MAX_RETRIES'] = spec['maxRetries']
             cm_spec['data']['TIMEOUT'] = str(spec['timeout'])
             cm_spec['data']['SHOW_PAGE_CONTENT'] = str(spec['showPageContent'])
             cm_spec['metadata']['name'] = self.config_map_name()

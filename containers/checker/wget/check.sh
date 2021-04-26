@@ -10,7 +10,6 @@ fi
 for i in `seq 1 $MAX_RETRIES`
 do
 RESPONSE_FILE=/tmp/http-response.$$
-rm -f $RESPONSE_FILE
 
 WGET_CMD_LINE="wget --timeout=${TIMEOUT} -O $RESPONSE_FILE ${URL}"
 

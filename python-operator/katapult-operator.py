@@ -14,7 +14,7 @@ def create_smoketest(body, meta, spec, namespace, status, **kwargs):
     runner = JobRunner(namespace, meta['name'])
     runner.deploy_configuration(spec)
     job_name = runner.trigger_job()
-    
+
     job_description = f"Check if '{spec['url']}' is available"
     kopf.info(body, reason='Created',
               message=f"Start '{job_name}' job: {job_description}'")
@@ -27,3 +27,9 @@ def delete_smoketest(body, meta, spec, namespace, status, **kwargs):
     runner = JobRunner(namespace, meta['name'])
     runner.delete_job()
     runner.undeploy_configuration()
+
+
+@kopf.index('jobs.batch')
+def tuple_keys(namespace, name, status, **_):
+    print(f"tuple_keys {namespace} / {name} / {status}")
+    return {(namespace, name): 'job'}

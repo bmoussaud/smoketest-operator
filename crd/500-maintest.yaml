@@ -4,10 +4,11 @@ metadata:
   name: main-test
   namespace: smok
 spec: 
-  url: http://back.mytanzu.xyz/dogs
+  url: http://back.mytanzu.xyzdfsjjfmslfdjks/dogs
   expectedResponseText: Total
   retryIntervalSeconds: 2
   startDelaySeconds: 4
   showPageContent: true
   timeout: 10
+  maxRetries: 3
     

@@ -32,6 +32,8 @@ spec:
                   type: string   
                 retryIntervalSeconds:
                   type: integer
+                maxRetries:
+                  type: integer
                 startDelaySeconds:
                   type: integer
                 timeout:
