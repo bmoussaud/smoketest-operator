@@ -1,6 +1,7 @@
 import kopf
 
 from jobrunner.trigger_job import JobRunner
+from jobrunner.pod_manager import PodManager
 
 
 @kopf.on.login()
@@ -30,6 +31,14 @@ def delete_smoketest(body, meta, spec, namespace, status, **kwargs):
 
 
 @kopf.index('jobs.batch')
-def tuple_keys(namespace, name, status, **_):
-    print(f"tuple_keys {namespace} / {name} / {status}")
-    return {(namespace, name): 'job'}
+def index_jobs(namespace, name, status,  **_):
+    print(f"jobs.batch {namespace} / {name} / {status}")
+    return {(namespace, name): 'jobs.batch'}
+
+
+@kopf.index('pods', field='status.phase', value='Failed')
+def index_failed_pod(namespace, name, status,  **_):
+    print(f"** index_failed_pod {namespace} / {name}")
+    logs = PodManager(namespace, name).read_log()
+    print(logs)
+    return {(namespace, name): 'pods'}

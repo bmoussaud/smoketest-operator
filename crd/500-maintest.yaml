@@ -6,9 +6,9 @@ metadata:
 spec: 
   url: http://back.mytanzu.xyzdfsjjfmslfdjks/dogs
   expectedResponseText: Total
-  retryIntervalSeconds: 2
-  startDelaySeconds: 4
+  retryIntervalSeconds: 1
+  startDelaySeconds: 1
   showPageContent: true
   timeout: 10
-  maxRetries: 3
+  maxRetries: 2
     
