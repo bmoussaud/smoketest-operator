@@ -2,10 +2,12 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: smoke-tester-job  
+  labels:
+      org.katpult.app: smoke
 spec:
-  backoffLimit: 4  
+  #backoffLimit: 4  
   template:
-    spec:
+    spec:      
       restartPolicy: Never
       containers:
         - name: test-runner
