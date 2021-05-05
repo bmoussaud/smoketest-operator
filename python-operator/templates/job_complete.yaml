@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke-tester-job  
+  labels:
+      org.katpult.app: smoke
+spec:
+  #backoffLimit: 4  
+  template:
+    spec:      
+      restartPolicy: Never
+      containers:
+        - name: test-runner
+          image: docker.io/katapulted/checker-wget:0.0.1
+          imagePullPolicy: Always
+          env:
+            - name: URL
+              value: "http://www.vmware.com"
+            - name: EXPECTED_RESPONSE_TEXT
+              value: "VMWARE"
+            - name: RETRY_INTERVAL_SECS
+              value: "2"
+            - name: MAX_RETRIES
+              value: "4"
+            - name: START_DELAY_SECS
+              value: "4"
+            - name: SHOW_PAGE_CONTENT
+              value: "1"
+            - name: TIMEOUT
+              value: "10"
+            - name: SKIP
+              value: "0"    

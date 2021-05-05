@@ -4,8 +4,8 @@ metadata:
   name: main-test
   namespace: smok
 spec: 
-  url: http://back.mytanzu.xyz/dogs
-  expectedResponseText: Total
+  url: http://www.vmware.com
+  expectedResponseText: VMWARE
   retryIntervalSeconds: 1
   startDelaySeconds: 1
   showPageContent: true

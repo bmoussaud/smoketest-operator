@@ -1,8 +1,9 @@
 import kopf
 import pprint
-
+import yaml
 from jobrunner.trigger_job import JobRunner
 from jobrunner.pod_manager import PodManager
+import pykube
 
 
 @kopf.on.login()
@@ -10,12 +11,38 @@ def login_fn(**kwargs):
     return kopf.login_via_client(**kwargs)
 
 
+class SmokeTest(pykube.objects.NamespacedAPIObject):
+    version = "katapult.org/v1alpha1"
+    endpoint = "smoketests"
+    kind = "SmokeTest"
+
+
+def k8s_api():
+    # api = pykube.HTTPClient(pykube.KubeConfig.from_file())
+    # config = pykube.KubeConfig.from_env()
+    # api = pykube.HTTPClient(config)
+
+    config_file = "/Users/benoitmoussaud/.kube/config-files/kubeconfig-aws-poc.yml"
+    api = pykube.HTTPClient(pykube.KubeConfig.from_file(config_file))
+    return api
+
+
 @kopf.on.create('smoketests')
-def create_smoketest(body, meta, spec, namespace, status, **kwargs):
+def create_smoketest(body, name, meta, spec, namespace, status, **kwargs):
     print(f"CREATE create_smoketests")
-    runner = JobRunner(namespace, meta['name'])
-    runner.deploy_configuration(spec)
-    job_name = runner.trigger_job()
+    template_job = "templates/job_complete.yaml"
+
+    job_name = f"job-smoke-test-{name}"
+    print(f"{job_name}")
+
+    with open(template_job) as f:
+        doc = yaml.safe_load(f)
+
+    doc['metadata']['name'] = job_name
+    kopf.adopt(doc)
+    kopf.label(doc, {'parent-name': name}, nested=['spec.template'])
+    child = pykube.Job(k8s_api(), doc)
+    child.create()
 
     job_description = f"Check if '{spec['url']}' is available"
     kopf.info(body, reason='Created',
@@ -23,30 +50,59 @@ def create_smoketest(body, meta, spec, namespace, status, **kwargs):
     return {'job-name': job_name, 'job-description': job_description}
 
 
-@kopf.on.delete('smoketests')
-def delete_smoketest(body, meta, spec, namespace, status, **kwargs):
+@kopf.on.event('', 'v1', 'pods', labels={'parent-name': kopf.PRESENT})
+def event_in_a_pod(labels, status, namespace, **kwargs):
+    print(f"event_in_a_pod")
+    print(f"event_in_a_pod {status}")
+    phase = status.get('phase')
+    print(f"event_in_a_pod {phase}")
+    query = SmokeTest.objects(k8s_api(), namespace=namespace)
+    try:
+        parent = query.get_by_name(labels['parent-name'])
+        print(f"event_in_a_pod {parent}")
+        parent.patch({'status': {'state': phase}})
+    except pykube.ObjectDoesNotExist:
+        print(
+            f" SmokeTest name={labels['parent-name']} does not exist anymore")
+
+
+@ kopf.on.delete('smoketests')
+def delete_smoketest(body, meta, name, spec, namespace, status, **kwargs):
     print(f"DELETE create_smoketests")
-    runner = JobRunner(namespace, meta['name'])
-    runner.delete_job()
-    runner.undeploy_configuration()
+    job_name = f"job-smoke-test-{name}"
+    print(f"job name is {job_name}")
+    query = pykube.Job.objects(k8s_api(), namespace=namespace)
+    parent = query.get_by_name(job_name)
+    parent.delete(propagation_policy="Background")
 
 
-@kopf.index('jobs.batch')
+# @ kopf.index('jobs.batch')
 def index_jobs(namespace, name, status,  **_):
     print(f"index_jobs jobs.batch {namespace} / {name} / {status}")
-    return {(namespace, name): 'jobs.batch'}
+    for k in status:
+        print(f"key {k}")
+    print('----')
+    if 'conditions' in status:
+        condition = status['conditions'][0]
+        print(condition)
+        return {(namespace, name): {'status': 'success', 'attempt': status['succeeded'], 'completionTime': status['startTime']}}
+
+    if 'failed' in status:
+        print("failed")
+        return {(namespace, name): {'status': 'failed', 'attempt': status['failed'], 'when': status['startTime']}}
 
 
-@kopf.on.probe()  # type: ignore
+# @ kopf.on.probe()  # type: ignore
 def job_count(index_jobs: kopf.Index, **_):
     print(" --> index_jobs %d" % len(index_jobs))
     return len(index_jobs)
 
 
-@kopf.timer('kex', interval=5)  # type: ignore
-def intervalled2(index_jobs: kopf.Index, patch: kopf.Patch, **_):
+# @ kopf.timer('jobs.batch', interval=5)
+def intervalled2(index_jobs: kopf.Index, **_):
     print("---- intervalled2 --------")
     pprint.pprint(dict(index_jobs))
+    print("---- /intervalled2 --------")
 
 # @kopf.index('pods', field='status.phase', value='Failed')
 
@@ -58,12 +114,12 @@ def index_failed_pod(namespace, name, status,  **_):
     return {(namespace, name): 'pods'}
 
 
-@kopf.on.event('', 'v1', 'pods')
+# @kopf.on.event('', 'v1', 'pods')
 async def pod_event(spec, name, namespace, status, logger, **kwargs):
     print(f"### on pod event {namespace}/{name}:{status}")
 
 
-@kopf.on.event('jobs')
+# @kopf.on.event('jobs')
 async def on_jobs_event(spec, name, namespace, body, status, logger, **kwargs):
     print(f"### on batch event {namespace}/{name}:{status}")
     for k in status:
@@ -78,7 +134,7 @@ async def on_jobs_event(spec, name, namespace, body, status, logger, **kwargs):
     print(f"### / on batch event {namespace}/{name}:{status}")
 
 
-@kopf.index('pods')
+# @ kopf.index('XXXXpods')
 def is_running(namespace, name, status, **_):
     print("---- is_running --------")
     return {(namespace, name): status.get('phase') == 'Running'}
@@ -87,7 +143,7 @@ def is_running(namespace, name, status, **_):
     #    ...}
 
 
-@kopf.index('pods')
+# @ kopf.index('XXXXpods')
 def by_label(labels, name, **_):
     print("---- by_label --------")
     return {(label, value): name for label, value in labels.items()}
@@ -97,19 +153,7 @@ def by_label(labels, name, **_):
     #    ...}
 
 
-@kopf.on.probe()  # type: ignore
-def pod_count(is_running: kopf.Index, **_):
-    print("---- pod_count --------")
-    return len(is_running)
-
-
-@kopf.on.probe()  # type: ignore
-def pod_names(is_running: kopf.Index, **_):
-    print("---- pod_names --------")
-    return [name for _, name in is_running]
-
-
-@kopf.timer('kex', interval=5)  # type: ignore
+# @ kopf.timer('XXXXpods', interval=5)  # type: ignore
 def intervalled(is_running: kopf.Index, by_label: kopf.Index, patch: kopf.Patch, **_):
     print("---- intervalled --------")
     pprint.pprint(dict(by_label))
@@ -119,9 +163,12 @@ def intervalled(is_running: kopf.Index, by_label: kopf.Index, patch: kopf.Patch,
         if ns in ['kube-system', 'default']
         if is_running
     ]
+    print(patch)
+    print("---- /intervalled --------")
 
-@kopf.timer('smoketests', idle=5, interval=2)
+
+# @kopf.timer('smoketests', idle=5, interval=2)
 def every_few_seconds_sync(spec, logger, **_):
-    #logger.info(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
-    #print(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
+    # logger.info(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
+    # print(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
     logger.info(f"BENOIT Ping from a sync timer: field={spec}")

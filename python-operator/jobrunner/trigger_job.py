@@ -26,6 +26,10 @@ class JobRunner:
     def job_name(self):
         return f"{self.resource_prefix}-cm-{self.namespace}-{self.name}"
 
+    @staticmethod
+    def from_job_name(job_name):
+        return JobRunner("smok","main-test")
+
     def deploy_configuration(self, spec):
         with open(self.template_cm) as f:
             cm_spec = yaml.safe_load(f)
@@ -41,6 +45,7 @@ class JobRunner:
             cm_spec['metadata']['name'] = self.config_map_name()
 
             self.logger.debug(f"cm_spec {cm_spec}")
+            return 
             api = kubernetes.client.CoreV1Api()
             api.create_namespaced_config_map(
                 body=cm_spec, namespace=self.job_namespace)
@@ -49,6 +54,7 @@ class JobRunner:
         api = kubernetes.client.CoreV1Api()
         api.delete_namespaced_config_map(
             name=self.config_map_name(), namespace=self.job_namespace)
+
 
     def trigger_job(self):
         kubernetes.config.load_kube_config()  # developer's config files

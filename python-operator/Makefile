@@ -4,3 +4,4 @@ local-run: setup
 setup:
 	pip3 install kopf
 	pip3 install kubernetes
+	pip3 install pykube-ng

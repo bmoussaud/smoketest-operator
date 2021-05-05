@@ -7,6 +7,10 @@ https://blog.baeke.info/2020/01/26/writing-a-kubernetes-operator-with-kopf/
 https://kopf.readthedocs.io/
 https://github.com/nolar/kopf
 
+https://pykube.readthedocs.io/en/latest/index.html
+
+# VIDEO
+https://www.youtube.com/watch?v=vkhTdaAtcRE
 
 ## ERRORS
 
