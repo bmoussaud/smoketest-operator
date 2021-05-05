@@ -4,6 +4,7 @@ import yaml
 from jobrunner.trigger_job import JobRunner
 from jobrunner.pod_manager import PodManager
 import pykube
+import stringcase
 
 
 @kopf.on.login()
@@ -37,6 +38,12 @@ def create_smoketest(body, name, meta, spec, namespace, status, **kwargs):
 
     with open(template_job) as f:
         doc = yaml.safe_load(f)
+
+    env = spec_to_env(spec)
+    containers = doc['spec']['template']['spec']['containers']
+    container = containers[0]
+    container['env'] = env
+    pprint.pprint(doc)
 
     doc['metadata']['name'] = job_name
     kopf.adopt(doc)
@@ -76,7 +83,26 @@ def delete_smoketest(body, meta, name, spec, namespace, status, **kwargs):
     parent.delete(propagation_policy="Background")
 
 
+def spec_to_env(spec):
+    env = []
+    print("spec_to_env")
+    pprint.pprint(spec)
+    for key in spec:
+        name = stringcase.constcase(key)
+        if spec[key] is True:
+            value = "TRUE"
+        elif spec[key] is False:
+            value = "FALSE"
+        else:
+            value = str(spec[key])
+
+        env.append({'name': name, 'value': value})
+    env.append({'name': 'SKIP', 'value': '0'})
+    return env
+
 # @ kopf.index('jobs.batch')
+
+
 def index_jobs(namespace, name, status,  **_):
     print(f"index_jobs jobs.batch {namespace} / {name} / {status}")
     for k in status:
@@ -172,3 +198,17 @@ def every_few_seconds_sync(spec, logger, **_):
     # logger.info(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
     # print(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
     logger.info(f"BENOIT Ping from a sync timer: field={spec}")
+
+
+if __name__ == "__main__":
+    with open("crd/500-maintest.yaml") as f:
+        smdoc = yaml.safe_load(f)
+    env = spec_to_env(smdoc['spec'])
+
+    print(env)
+    with open("python-operator/templates/job_complete.yaml") as f:
+        doc = yaml.safe_load(f)
+    containers = doc['spec']['template']['spec']['containers']
+    container = containers[0]
+    container['env'] = env
+    pprint.pprint(doc)

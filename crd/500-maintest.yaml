@@ -4,11 +4,11 @@ metadata:
   name: main-test
   namespace: smok
 spec: 
-  url: http://www.vmware.com
-  expectedResponseText: VMWARE
+  url: https://carvel.dev/
+  expectedResponseText: ytt
   retryIntervalSeconds: 1
   startDelaySeconds: 1
   showPageContent: true
   timeout: 10
-  maxRetries: 2
+  maxRetries: 10
     
