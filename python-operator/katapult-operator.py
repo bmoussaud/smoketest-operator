@@ -29,10 +29,10 @@ def k8s_api():
 
 @kopf.on.create('smoketests')
 def create(body, name, meta, spec, namespace, status, logger, **kwargs):
-    logger.info(f"create smoke test")
+    logger.info(f"create smoke test {name}")
     template_job = "templates/job_complete.yaml"
 
-    job_name = f"job-smoke-test-{name}"
+    job_name = get_job_name(name)
     logger.debug(f"{job_name}")
 
     with open(template_job) as f:
@@ -71,14 +71,25 @@ def event_in_a_pod(labels, status, namespace, logger, **kwargs):
             f"associated smokeTest name='{labels['parent-name']}' does not exist anymore in '{namespace}' namespace")
 
 
+@kopf.on.update('smoketests')
+def update(body, name, meta, spec, namespace, status, logger, **kwargs):
+    logger.info(f"update smoke test {name}")
+    delete_smoketest(name, namespace, logger)
+    create(body, name, meta, spec, namespace, status, logger)
+
+
 @ kopf.on.delete('smoketests')
-def delete_smoketest(body, meta, name, spec, namespace, status, logger, **kwargs):
-    logger.info(f"delete smoke test")
-    job_name = f"job-smoke-test-{name}"
+def delete_smoketest(name, namespace, logger, **kwargs):
+    logger.info(f"delete smoke test {name}")
+    job_name = get_job_name(name)
     logger.info(f"job name is {job_name}")
     query = pykube.Job.objects(k8s_api(), namespace=namespace)
     parent = query.get_by_name(job_name)
     parent.delete(propagation_policy="Background")
+
+
+def get_job_name(name):
+    return f"job-smoke-test-{name}"
 
 
 def spec_to_env(spec):
