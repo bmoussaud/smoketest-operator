@@ -1,9 +1,8 @@
 import kopf
+import operator
+import pykube
 import pprint
 import yaml
-from jobrunner.trigger_job import JobRunner
-from jobrunner.pod_manager import PodManager
-import pykube
 import stringcase
 
 
@@ -34,7 +33,7 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
     template_job = "templates/job_complete.yaml"
 
     job_name = f"job-smoke-test-{name}"
-    print(f"{job_name}")
+    logger.debug(f"{job_name}")
 
     with open(template_job) as f:
         doc = yaml.safe_load(f)
@@ -43,7 +42,7 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
     containers = doc['spec']['template']['spec']['containers']
     container = containers[0]
     container['env'] = env
-    logger.info(pprint.pformat(doc))
+    logger.debug(pprint.pformat(doc))
 
     doc['metadata']['name'] = job_name
     kopf.adopt(doc)
@@ -100,105 +99,6 @@ def spec_to_env(spec):
         env.append({'name': name, 'value': value})
     env.append({'name': 'SKIP', 'value': '0'})
     return env
-
-# @ kopf.index('jobs.batch')
-
-
-def index_jobs(namespace, name, status,  **_):
-    print(f"index_jobs jobs.batch {namespace} / {name} / {status}")
-    for k in status:
-        print(f"key {k}")
-    print('----')
-    if 'conditions' in status:
-        condition = status['conditions'][0]
-        print(condition)
-        return {(namespace, name): {'status': 'success', 'attempt': status['succeeded'], 'completionTime': status['startTime']}}
-
-    if 'failed' in status:
-        print("failed")
-        return {(namespace, name): {'status': 'failed', 'attempt': status['failed'], 'when': status['startTime']}}
-
-
-# @ kopf.on.probe()  # type: ignore
-def job_count(index_jobs: kopf.Index, **_):
-    print(" --> index_jobs %d" % len(index_jobs))
-    return len(index_jobs)
-
-
-# @ kopf.timer('jobs.batch', interval=5)
-def intervalled2(index_jobs: kopf.Index, **_):
-    print("---- intervalled2 --------")
-    pprint.pprint(dict(index_jobs))
-    print("---- /intervalled2 --------")
-
-# @kopf.index('pods', field='status.phase', value='Failed')
-
-
-def index_failed_pod(namespace, name, status,  **_):
-    print(f"** index_failed_pod {namespace} / {name}")
-    logs = PodManager(namespace, name).read_log()
-    print(logs)
-    return {(namespace, name): 'pods'}
-
-
-# @kopf.on.event('', 'v1', 'pods')
-async def pod_event(spec, name, namespace, status, logger, **kwargs):
-    print(f"### on pod event {namespace}/{name}:{status}")
-
-
-# @kopf.on.event('jobs')
-async def on_jobs_event(spec, name, namespace, body, status, logger, **kwargs):
-    print(f"### on batch event {namespace}/{name}:{status}")
-    for k in status:
-        print(f"key {k}")
-    print('----')
-    if 'conditions' in status:
-        for condition in status['conditions']:
-            print(f"--> {condition}")
-            message = f"Job '{name}' {condition['type']}:{condition['status']}"
-            print(f"the message is {message}")
-            kopf.info(body, reason='Created', message=message)
-    print(f"### / on batch event {namespace}/{name}:{status}")
-
-
-# @ kopf.index('XXXXpods')
-def is_running(namespace, name, status, **_):
-    print("---- is_running --------")
-    return {(namespace, name): status.get('phase') == 'Running'}
-    # {('kube-system', 'traefik-...-...'): True,
-    #  ('kube-system', 'helm-install-traefik-...'): False,
-    #    ...}
-
-
-# @ kopf.index('XXXXpods')
-def by_label(labels, name, **_):
-    print("---- by_label --------")
-    return {(label, value): name for label, value in labels.items()}
-    # {('app', 'traefik'): ['traefik-...-...'],
-    #  ('job-name', 'helm-install-traefik'): ['helm-install-traefik-...'],
-    #  ('helmcharts.helm.cattle.io/chart', 'traefik'): ['helm-install-traefik-...'],
-    #    ...}
-
-
-# @ kopf.timer('XXXXpods', interval=5)  # type: ignore
-def intervalled(is_running: kopf.Index, by_label: kopf.Index, patch: kopf.Patch, **_):
-    print("---- intervalled --------")
-    pprint.pprint(dict(by_label))
-    patch.status['running-pods'] = [
-        f"{ns}::{name}"
-        for (ns, name), is_running in is_running.items()
-        if ns in ['kube-system', 'default']
-        if is_running
-    ]
-    print(patch)
-    print("---- /intervalled --------")
-
-
-# @kopf.timer('smoketests', idle=5, interval=2)
-def every_few_seconds_sync(spec, logger, **_):
-    # logger.info(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
-    # print(f"BENOIT Ping from a sync timer: field={spec['field']!r}")
-    logger.info(f"BENOIT Ping from a sync timer: field={spec}")
 
 
 if __name__ == "__main__":
