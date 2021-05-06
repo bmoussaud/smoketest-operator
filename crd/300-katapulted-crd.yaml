@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: smoketests.katapult.org
-spec:
+spec:  
   group: katapult.org
   scope: Namespaced
   names:
@@ -12,10 +12,25 @@ spec:
     singular: smoketest
     shortNames:
       - st
+  
+
   versions:
     - name: v1alpha1
       served: true
       storage: true
+      additionalPrinterColumns:
+      - jsonPath: .status.conditions[?(@.type=="Succeeded")].status
+        name: Succeeded
+        type: string
+      - jsonPath: .status.conditions[?(@.type=="Succeeded")].reason
+        name: Reason
+        type: string
+      - jsonPath: .status.startTime
+        name: StartTime
+        type: date
+      - jsonPath: .status.completionTime
+        name: CompletionTime
+        type: date
       schema:
         openAPIV3Schema:
           type: object
@@ -23,21 +38,46 @@ spec:
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
+              properties:                
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      type:
+                        type: string                    
+                startTime:
+                  type: string
+                  format: dateTime              
+                completionTime:
+                  type: string  
+                  format: dateTime              
             spec:
               type: object
               properties:
                 url:
+                  description: URL will be tested
                   type: string
                 expectedResponseText:
+                  description: The expected response from the tested url
                   type: string   
                 retryIntervalSeconds:
+                  description: number of seconds between 2 requests
                   type: integer
                 maxRetries:
+                  description:  Number of attempt to run the test
                   type: integer
                 startDelaySeconds:
+                  description: Number of seconds before starting the test
                   type: integer
                 timeout:
+                  description: Waiting timeout 
                   type: integer
                 showPageContent:
+                  description: Display the output of the content of tested url.
                   type: boolean
 
