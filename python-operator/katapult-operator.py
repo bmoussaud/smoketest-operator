@@ -58,9 +58,9 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
 
 @kopf.on.event('', 'v1', 'pods', labels={'parent-name': kopf.PRESENT})
 def event_in_a_pod(labels, status, namespace, logger, **kwargs):
-    logger.debug(f"event_in_a_pod {status}")
+    logger.debug(f"event_in_a_pod {labels['parent-name']}:{status}")
     phase = status.get('phase')
-    logger.info(f"event_in_a_pod {phase}")
+    logger.info(f"smoke test '{labels['parent-name']}'='{phase}'")
     query = SmokeTest.objects(k8s_api(), namespace=namespace)
     try:
         parent = query.get_by_name(labels['parent-name'])
