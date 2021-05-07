@@ -41,6 +41,8 @@ spec:
               properties:                
                 conditions:
                   type: array
+                  #x-kubernetes-patch-merge-key: name
+                  #x-kubernetes-patch-strategy: merge
                   items:
                     type: object
                     properties:
@@ -48,8 +50,13 @@ spec:
                         type: string
                       reason:
                         type: string
+                      message:
+                        type: string
                       type:
-                        type: string                    
+                        type: string   
+                      lastTransitionTime:
+                        type: string  
+                        format: dateTime                        
                 startTime:
                   type: string
                   format: dateTime              
@@ -62,6 +69,7 @@ spec:
                 url:
                   description: URL will be tested
                   type: string
+                  example: http://www.moussaud.org
                 expectedResponseText:
                   description: The expected response from the tested url
                   type: string   

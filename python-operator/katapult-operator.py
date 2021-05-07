@@ -53,19 +53,38 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
     job_description = f"Check if '{spec['url']}' is available"
     kopf.info(body, reason='Created',
               message=f"Start '{job_name}' job: {job_description}'")
+
     return {'job-name': job_name, 'job-description': job_description}
 
 
 @kopf.on.event('', 'v1', 'pods', labels={'parent-name': kopf.PRESENT})
 def event_in_a_pod(labels, status, namespace, logger, **kwargs):
-    logger.debug(f"event_in_a_pod {labels['parent-name']}:{status}")
+    logger.info(f"event_in_a_pod {labels['parent-name']}:{status}")
     phase = status.get('phase')
+    startTime = status.get('startTime')
     logger.info(f"smoke test '{labels['parent-name']}'='{phase}'")
     query = SmokeTest.objects(k8s_api(), namespace=namespace)
     try:
         parent = query.get_by_name(labels['parent-name'])
-        logger.debug(f"event_in_a_pod {parent}")
-        parent.patch({'status': {'state': phase}})
+
+        #logger.info(f"event_in_a_pod PARENT {parent}")
+        #logger.info(f"event_in_a_pod PARENT %s" % type(parent))
+        #logger.info(f"event_in_a_pod PARENT %s" % dir(parent))
+        status = parent.obj['status']
+        logger.info(f"event_in_a_pod get st{status}")
+        conditions = []
+        if not 'conditions' in status:
+            status['conditions'] = conditions
+        conditions = status['conditions']
+        logger.info(f"event_in_a_pod conditions {conditions}")
+        conditions.append({'status': phase})
+        status['conditions'] = conditions
+        status['startTime'] = startTime
+        logger.info(f"event_in_a_pod update st {status}")
+        parent.update(status)
+        # parent.patch(
+        #    {'status': {'startTime': startTime, 'conditions': [{'status': phase}, {'status': 'benoit'}]}})
+
     except pykube.ObjectDoesNotExist:
         logger.info(
             f"associated smokeTest name='{labels['parent-name']}' does not exist anymore in '{namespace}' namespace")
