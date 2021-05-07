@@ -19,6 +19,9 @@ spec:
       served: true
       storage: true
       additionalPrinterColumns:
+      - jsonPath: .status.attempts
+        name: Attempts
+        type: integer
       - jsonPath: .status.conditions[?(@.type=="Succeeded")].status
         name: Succeeded
         type: string
@@ -62,7 +65,10 @@ spec:
                   format: dateTime              
                 completionTime:
                   type: string  
-                  format: dateTime              
+                  format: dateTime
+                attempts:
+                  type: integer
+                  description: number of attempts              
             spec:
               type: object
               properties:
