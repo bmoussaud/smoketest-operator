@@ -5,10 +5,10 @@ metadata:
   namespace: smok
 spec: 
   url: https://carvel.dev/
-  expectedResponseText: benoitmoussaud
+  expectedResponseText: ytt
   retryIntervalSeconds: 1
   startDelaySeconds: 1
   showPageContent: true
-  timeout: 10
-  maxRetries: 10
+  timeout: 1
+  maxRetries: 1
     

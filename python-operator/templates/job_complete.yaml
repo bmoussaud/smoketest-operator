@@ -5,7 +5,7 @@ metadata:
   labels:
       org.katpult.app: smoke
 spec:
-  #backoffLimit: 4  
+  backoffLimit: 1
   template:
     spec:      
       restartPolicy: Never
