@@ -58,32 +58,22 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
     kopf.info(body, reason='Created',
               message=f"Start '{job_name}' job: {job_description}'")
 
+    # TODO: manage the status section properly, done by the return line below
+    # but if you remove it, you'll get None line #75 status = parent.obj['status']
     return {'job-name': job_name, 'job-description': job_description}
 
 
 @kopf.on.event('', 'v1', 'pods', labels={'parent-name': kopf.PRESENT})
 def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
-    if 0 == 1:
-        logger.info("------")
-        logger.info(f"----- Started {started} {type(started)}")
-        logger.info(type(kwargs))
-        logger.info(dir(kwargs))
-        for k in kwargs:
-            logger.info(k)
-            logger.info(kwargs[k])
-        logger.info("------")
     logger.info(f"event_in_a_pod {labels['parent-name']}:{status}")
     phase = status.get('phase')
     startTime = status.get('startTime')
     logger.info(f"smoke test '{labels['parent-name']}'='{phase}'")
     query = SmokeTest.objects(K8S_API.k8s_api(), namespace=namespace)
     try:
-        parent = query.get_by_name(labels['parent-name'])        
+        parent = query.get_by_name(labels['parent-name'])
         status = parent.obj['status']
-        conditions = []
-        if not 'conditions' in status:
-            status['conditions'] = conditions
-        conditions = status['conditions']
+        
 
         if not 'startTime' in status:
             status['startTime'] = startTime
@@ -95,19 +85,24 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
             if not 'attempts' in status:
                 status['attempts'] = 0
             status['attempts'] = status['attempts'] + 1
+        else: 
+            conditions = []
+            if not 'conditions' in status:
+                status['conditions'] = conditions
+            conditions = status['conditions']
+            
+            message = ""    
+            if phase == 'Failed':
+                logger.info(f"query log {namespace}/{name}")
+                message = pykube.Pod.objects(K8S_API.k8s_api()).filter(
+                    namespace=namespace).get(name=name).logs()
+                logger.info(f"query message {message}")
 
-        message = ""
-        if phase == 'Failed':
-            logger.info(f"query log {namespace}/{name}")
-            message = pykube.Pod.objects(K8S_API.k8s_api()).filter(
-                namespace=namespace).get(name=name).logs()            
-            logger.info(f"query message {message}")
-
-        conditions.append({'status': phase,
-                           'type': phase,
-                           'message': message,
-                           'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
-        status['conditions'] = conditions
+            conditions.append({'status': phase,
+                            'type': phase,
+                            'message': message,
+                            'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
+            status['conditions'] = conditions
 
         logger.info(f"event_in_a_pod update status with {status}")
         parent.update()
@@ -134,6 +129,34 @@ def delete_smoketest(name, namespace, logger, **kwargs):
     query = pykube.Job.objects(K8S_API.k8s_api(), namespace=namespace)
     parent = query.get_by_name(job_name)
     parent.delete(propagation_policy="Background")
+
+
+@kopf.on.event('jobs',  labels={'parent-name': kopf.PRESENT})
+def event_in_job(labels, status, name, namespace, started, logger, **kwargs):
+    logger.info(f"event_in_job {labels['parent-name']}:{status}")
+    if 'conditions' not in status:
+        return
+
+    for condition in status['conditions']:
+        if condition['type'] == 'Failed':
+            logger.info(
+                f"smoke test failed job '{labels['parent-name']}'='{condition}'")
+            parent = SmokeTest.objects(K8S_API.k8s_api()).filter(
+                namespace=namespace).get(name=labels['parent-name'])
+            status = parent.obj['status']
+            conditions = []
+            if not 'conditions' in status:
+                status['conditions'] = conditions
+            conditions = status['conditions']
+            status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            conditions.append({'status': 'True',
+                               'type': 'Failed',
+                               'message': condition['message'],
+                               'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
+            status['conditions'] = conditions
+            logger.info(f"event_in_a_pod update status with {status}")
+            parent.update()
 
 
 def get_job_name(name):
