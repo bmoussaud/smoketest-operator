@@ -33,7 +33,7 @@ K8S_API = K8SApi()
 
 @kopf.on.create('smoketests')
 def create(body, name, meta, spec, namespace, status, logger, **kwargs):
-    logger.info(f"create smoke test {name}")
+    logger.debug(f"create smoke test {name}")
     template_job = "templates/job_complete.yaml"
 
     job_name = get_job_name(name)
@@ -65,10 +65,10 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
 
 @kopf.on.event('', 'v1', 'pods', labels={'parent-name': kopf.PRESENT})
 def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
-    logger.info(f"event_in_a_pod {labels['parent-name']}:{status}")
+    logger.debug(f"event_in_a_pod {labels['parent-name']}:{status}")
     phase = status.get('phase')
     startTime = status.get('startTime')
-    logger.info(f"smoke test '{labels['parent-name']}'='{phase}'")
+    logger.debug(f"smoke test '{labels['parent-name']}'='{phase}'")
     query = SmokeTest.objects(K8S_API.k8s_api(), namespace=namespace)
     try:
         parent = query.get_by_name(labels['parent-name'])
@@ -93,10 +93,10 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
             
             message = ""    
             if phase == 'Failed':
-                logger.info(f"query log {namespace}/{name}")
+                logger.debug(f"query log {namespace}/{name}")
                 message = pykube.Pod.objects(K8S_API.k8s_api()).filter(
                     namespace=namespace).get(name=name).logs()
-                logger.info(f"query message {message}")
+                logger.debug(f"query message {message}")
 
             conditions.append({'status': phase,
                             'type': phase,
@@ -104,28 +104,28 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
                             'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
             status['conditions'] = conditions
 
-        logger.info(f"event_in_a_pod update status with {status}")
+        logger.debug(f"event_in_a_pod update status with {status}")
         parent.update()
         # parent.patch(
         #    {'status': {'startTime': startTime, 'conditions': [{'status': phase}, {'status': 'benoit'}]}})
 
     except pykube.ObjectDoesNotExist:
-        logger.info(
+        logger.debug(
             f"associated smokeTest name='{labels['parent-name']}' does not exist anymore in '{namespace}' namespace")
 
 
 @ kopf.on.update('smoketests')
 def update(body, name, meta, spec, namespace, status, logger, **kwargs):
-    logger.info(f"update smoke test {name}")
+    logger.debug(f"update smoke test {name}")
     delete_smoketest(name, namespace, logger)
     create(body, name, meta, spec, namespace, status, logger)
 
 
 @ kopf.on.delete('smoketests')
 def delete_smoketest(name, namespace, logger, **kwargs):
-    logger.info(f"delete smoke test {name}")
+    logger.debug(f"delete smoke test {name}")
     job_name = get_job_name(name)
-    logger.info(f"job name is {job_name}")
+    logger.debug(f"job name is {job_name}")
     query = pykube.Job.objects(K8S_API.k8s_api(), namespace=namespace)
     parent = query.get_by_name(job_name)
     parent.delete(propagation_policy="Background")
@@ -133,13 +133,13 @@ def delete_smoketest(name, namespace, logger, **kwargs):
 
 @kopf.on.event('jobs',  labels={'parent-name': kopf.PRESENT})
 def event_in_job(labels, status, name, namespace, started, logger, **kwargs):
-    logger.info(f"event_in_job {labels['parent-name']}:{status}")
+    logger.debug(f"event_in_job {labels['parent-name']}:{status}")
     if 'conditions' not in status:
         return
 
     for condition in status['conditions']:
         if condition['type'] == 'Failed':
-            logger.info(
+            logger.debug(
                 f"smoke test failed job '{labels['parent-name']}'='{condition}'")
             parent = SmokeTest.objects(K8S_API.k8s_api()).filter(
                 namespace=namespace).get(name=labels['parent-name'])
@@ -155,7 +155,7 @@ def event_in_job(labels, status, name, namespace, started, logger, **kwargs):
                                'message': condition['message'],
                                'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
             status['conditions'] = conditions
-            logger.info(f"event_in_a_pod update status with {status}")
+            logger.debug(f"event_in_a_pod update status with {status}")
             parent.update()
 
 
@@ -167,7 +167,7 @@ def spec_to_env(spec):
     env = []
 
     # pprint.pprint(spec)
-    # logger.info(pprint.pformat(spec))
+    # logger.debug(pprint.pformat(spec))
 
     for key in spec:
         name = stringcase.constcase(key)
