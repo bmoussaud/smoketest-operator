@@ -5,6 +5,7 @@ deploy-crd:
 deploy-sample:	
 	kubectl apply -f crd/500-maintest.yaml
 	kubectl describe smoketests.katapult.org main-test  -n smok
+	kubectl get smoketests.katapult.org -n smok main-test
 	
 undeploy-sample:
 	#kubectl patch smoketests.katapult.org main-test  -n smok -p '{"metadata": {"finalizers": []}}' --type merge

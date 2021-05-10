@@ -22,18 +22,18 @@ spec:
       - jsonPath: .status.attempts
         name: Attempts
         type: integer
-      - jsonPath: .status.conditions[?(@.type=="Succeeded")].status
-        name: Succeeded
-        type: string
-      - jsonPath: .status.conditions[?(@.type=="Succeeded")].reason
-        name: Reason
-        type: string
+      - jsonPath: .status.conditions[-1].type
+        name: Status
+        type: string      
       - jsonPath: .status.startTime
         name: StartTime
         type: date
       - jsonPath: .status.completionTime
         name: CompletionTime
         type: date
+      - jsonPath: .status.conditions[-1].message
+        name: Message
+        type: string
       schema:
         openAPIV3Schema:
           type: object

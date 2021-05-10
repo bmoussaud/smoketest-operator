@@ -71,37 +71,37 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
     logger.debug(f"smoke test '{labels['parent-name']}'='{phase}'")
     query = SmokeTest.objects(K8S_API.k8s_api(), namespace=namespace)
     try:
+        message = ""
         parent = query.get_by_name(labels['parent-name'])
         status = parent.obj['status']
-        
 
         if not 'startTime' in status:
             status['startTime'] = startTime
 
         if phase == 'Succeeded':
             status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
+            message = f"'{parent.obj['spec']['url']}' is available"
 
         if phase == 'Pending':
             if not 'attempts' in status:
                 status['attempts'] = 0
             status['attempts'] = status['attempts'] + 1
-        else: 
+        else:
             conditions = []
             if not 'conditions' in status:
                 status['conditions'] = conditions
             conditions = status['conditions']
-            
-            message = ""    
+
             if phase == 'Failed':
                 logger.debug(f"query log {namespace}/{name}")
                 message = pykube.Pod.objects(K8S_API.k8s_api()).filter(
                     namespace=namespace).get(name=name).logs()
                 logger.debug(f"query message {message}")
 
-            conditions.append({'status': phase,
-                            'type': phase,
-                            'message': message,
-                            'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
+            conditions.append({'status': 'True',
+                               'type': phase,
+                               'message': message,
+                               'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
             status['conditions'] = conditions
 
         logger.debug(f"event_in_a_pod update status with {status}")
@@ -139,24 +139,29 @@ def event_in_job(labels, status, name, namespace, started, logger, **kwargs):
 
     for condition in status['conditions']:
         if condition['type'] == 'Failed':
-            logger.debug(
+            logger.info(
                 f"smoke test failed job '{labels['parent-name']}'='{condition}'")
-            parent = SmokeTest.objects(K8S_API.k8s_api()).filter(
-                namespace=namespace).get(name=labels['parent-name'])
-            status = parent.obj['status']
-            conditions = []
-            if not 'conditions' in status:
+            try:
+                parent = SmokeTest.objects(K8S_API.k8s_api()).filter(
+                    namespace=namespace).get(name=labels['parent-name'])
+                status = parent.obj['status']
+                conditions = []
+                if not 'conditions' in status:
+                    status['conditions'] = conditions
+                conditions = status['conditions']
+                status['completionTime'] = started.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ")
+                conditions.append({'status': 'True',
+                                   'type': 'Failed',
+                                   'reason': condition['message'],
+                                   'message': f"'{parent.obj['spec']['url']}' is not available",
+                                   'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
                 status['conditions'] = conditions
-            conditions = status['conditions']
-            status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-            conditions.append({'status': 'True',
-                               'type': 'Failed',
-                               'message': condition['message'],
-                               'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
-            status['conditions'] = conditions
-            logger.debug(f"event_in_a_pod update status with {status}")
-            parent.update()
+                logger.debug(f"event_in_a_pod update status with {status}")
+                parent.update()
+            except pykube.ObjectDoesNotExist:
+                logger.debug(
+                    f"associated smokeTest name='{labels['parent-name']}' does not exist anymore in '{namespace}' namespace")
 
 
 def get_job_name(name):
