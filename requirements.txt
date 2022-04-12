@@ -3,3 +3,4 @@ kubernetes
 pykube-ng
 pyyaml
 jinja2
+stringcase

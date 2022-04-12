@@ -8,7 +8,8 @@ import stringcase
 
 @kopf.on.login()
 def login_fn(**kwargs):
-    return kopf.login_via_client(**kwargs)
+    #return kopf.login_via_client(**kwargs)
+    return kopf.login_with_service_account(**kwargs) or kopf.login_with_kubeconfig(**kwargs)
 
 
 class SmokeTest(pykube.objects.NamespacedAPIObject):
@@ -20,10 +21,9 @@ class SmokeTest(pykube.objects.NamespacedAPIObject):
 class K8SApi:
     def __init__(self):
         print("----------------- LOAD  K8S_API----------------------")
-        config_file = "/Users/benoitmoussaud/.kube/config-files/kubeconfig-aws-poc.yml"
+        #config_file = "/Users/benoitmoussaud/.kube/config-files/kubeconfig-aws-poc.yml"
         config_file = None
-        self._api = pykube.HTTPClient(
-            pykube.KubeConfig.from_file(config_file))
+        self._api = pykube.HTTPClient(pykube.KubeConfig.from_file(config_file))
 
     def k8s_api(self):
         return self._api

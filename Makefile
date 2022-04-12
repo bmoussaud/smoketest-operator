@@ -3,13 +3,15 @@ SOURCE_BRANCH=v0.0.1
 VERSION="develop"
 IMAGE_NAME=katapulted/smoketest-operator
 IMAGE_VERSION=0.0.1
+REGISTRY=harbor.mytanzu.xyz/library
+
 IMAGE=$(IMAGE_NAME):$(IMAGE_VERSION)
 BUILD_DATE=$(shell date)
 GIT_REV=$(shell git rev-parse --short HEAD)
 
 
 crd: namespace
-	kubectl apply -f crd/300-katapulted-crd.yaml
+	kubectl apply -f crd/300-smoketests.katapult.org-crd.yaml
 	kubectl api-resources --api-group katapult.org
 	
 deploy-sample:	
@@ -18,11 +20,11 @@ deploy-sample:
 	kubectl get smoketests.katapult.org -n $(NAMESPACE) main-test
 	
 undeploy-sample:
-	#kubectl patch smoketests.katapult.org main-test  -n $(NAMESPACE) -p '{"metadata": {"finalizers": []}}' --type merge
-	kubectl delete -f crd/500-maintest.yaml
+	kubectl patch smoketests.katapult.org main-test  -n $(NAMESPACE) -p '{"metadata": {"finalizers": []}}' --type merge
+	kubectl delete -f crd/500-maintest.yaml -n $(NAMESPACE)
 	
 undeploy-crd:
-	kubectl delete -f crd/300-katapulted-crd.yaml
+	kubectl delete -f crd/300-smoketests.katapult.org-crd.yaml
 	kubectl api-resources --api-group katapult.org
 
 namespace:
@@ -55,5 +57,11 @@ build-image:
     	--label org.label-schema.schema-version="1.0" \
     	--build-arg VERSION="$(VERSION)" \
     	-f "." \
-    	-t "$(IMAGE_NAME)"  \
+    	-t "$(IMAGE)"  \
 		.	
+push: build-image
+	docker tag $(IMAGE_NAME) $(REGISTRY)/$(IMAGE)
+	docker push $(REGISTRY)/$(IMAGE)
+
+run-image: build-image
+	docker run --rm  -v ~/.kube:/home/operator/.kube $(IMAGE)

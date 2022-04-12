@@ -19,11 +19,9 @@ RUN useradd -d "$HOME" -u ${uid} -g ${group} -m -s /bin/bash ${user} \
 
 USER ${user}
 
-ENV KUBECONFIG $HOME/.kube/config
+ENV KUBECONFIG $HOME/.kube/config.yaml
+WORKDIR /home/operator
 
-COPY templates $HOME
-COPY logging.json $HOME
-COPY smoketest-operator.py $HOME
-
-
-CMD kopf run --log-format=full $HOME/operator.py
+COPY . /home/operator/
+    
+CMD kopf run --log-format=full $HOME/smoketest-operator.py
