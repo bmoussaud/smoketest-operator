@@ -21,6 +21,7 @@ class K8SApi:
     def __init__(self):
         print("----------------- LOAD  K8S_API----------------------")
         config_file = "/Users/benoitmoussaud/.kube/config-files/kubeconfig-aws-poc.yml"
+        config_file = None
         self._api = pykube.HTTPClient(
             pykube.KubeConfig.from_file(config_file))
 

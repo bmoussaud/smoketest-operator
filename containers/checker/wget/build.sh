@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x 
 # If we're building a tag, map it to the upstream tags. Otherwise use develop.
 if grep '^v[0-9.]\+$' <<< "${SOURCE_BRANCH}" &>/dev/null; then
     VERSION="${SOURCE_BRANCH}"

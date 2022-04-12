@@ -14,4 +14,4 @@ dockerhub-push: build
 	docker push  $(IMAGE)
 
 docker-run: build
-	docker run --rm -e EXPECTED_RESPONSE_TEXT="html" -e RETRY_INTERVAL_SECS=1 -e START_DELAY_SECS=1 -e URL=http://www.google.benoit/ -e SHOW_PAGE_CONTENT=0   $(IMAGE) 
+	docker run --rm -e EXPECTED_RESPONSE_TEXT="html" -e RETRY_INTERVAL_SECS=1 -e START_DELAY_SECS=1 -e URL=http://front.mytanzu.xyz/pets -e SHOW_PAGE_CONTENT=0   $(IMAGE) 
