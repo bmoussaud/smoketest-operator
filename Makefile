@@ -24,8 +24,8 @@ namespace:
 
 # https://craignewtondev.medium.com/how-to-fix-kubernetes-namespace-deleting-stuck-in-terminating-state-5ed75792647e
 force-delete-ns:
-	kubectl get namespace $(NAMESPACE) -o json > smok.json
-	cat smok.json | grep -v '"kubernetes' > smoked.json
-	kubectl replace --raw "/api/v1/namespaces/smok/finalize" -f ./smoked.json
+	kubectl get namespace $(NAMESPACE) -o json > /tmp/smok.json
+	cat /tmp/smok.json | grep -v '"kubernetes' > /tmp/smoked.json
+	kubectl replace --raw "/api/v1/namespaces/smok/finalize" -f /tmp/smoked.json
 	kubectl delete ns $(NAMESPACE)
 	
