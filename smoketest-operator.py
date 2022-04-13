@@ -66,8 +66,8 @@ class Jobs:
 
 class K8SApi:
     def __init__(self):
-        # if 'KUBERNETES_PORT' in os.environ:
-        if IN_CLUSTER:
+        if 'KUBERNETES_PORT' in os.environ:
+        #if IN_CLUSTER:
             print("----------------- LOAD  K8S_API IN CLUSTER----------------------")
             k8s_config.load_incluster_config()
         else:
