@@ -42,12 +42,11 @@ force-delete-ns:
 	kubectl delete ns $(NAMESPACE)
 	
 
-local-run: setup
+local-run:
 	kopf run --log-format=full  smoketest-operator.py
 
 setup:
 	pip3 install --upgrade kopf 
-	pip3 install --upgrade pykube-ng 
 	pip3 install --upgrade stringcase 
 	pip3 install --upgrade kubernetes
 	
@@ -66,7 +65,7 @@ push: build-image
 	docker push $(REGISTRY)/$(IMAGE)
 
 run-image: build-image 
-	docker run --rm  -v ~/.kube:/home/operator/.kube $(IMAGE)
+	docker run -i --rm  -v ~/.kube:/home/operator/.kube $(IMAGE)
 
 run-pushed-image: build-image push
-	docker run --rm  -v ~/.kube:/home/operator/.kube $(REGISTRY)/$(IMAGE)
+	docker run -i --rm  -v ~/.kube:/home/operator/.kube $(REGISTRY)/$(IMAGE)

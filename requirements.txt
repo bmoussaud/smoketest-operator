@@ -1,6 +1,6 @@
 kopf
 kubernetes
-pykube-ng
+#pykube-ng
 pyyaml
 jinja2
 stringcase
