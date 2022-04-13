@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smoketest-operator
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      application: smoketest-operator
+  template:
+    metadata:
+      labels:
+        application: smoketest-operator
+    spec:
+      serviceAccountName: smoketest-operator-account
+      containers:
+      - name: the-only-one
+        image: harbor.mytanzu.xyz/library/katapulted/smoketest-operator:0.0.1
+        imagePullPolicy: Always

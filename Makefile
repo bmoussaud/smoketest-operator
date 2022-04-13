@@ -10,21 +10,23 @@ BUILD_DATE=$(shell date)
 GIT_REV=$(shell git rev-parse --short HEAD)
 
 
-crd: namespace
-	kubectl apply -f crd/300-smoketests.katapult.org-crd.yaml
+deploy: namespace
+	kubectl apply -f crd -n $(NAMESPACE)
 	kubectl api-resources --api-group katapult.org
+	kubectl get deployments.apps -n $(NAMESPACE)
 	
 deploy-sample:	
-	kubectl apply -f crd/500-maintest.yaml -n $(NAMESPACE)
-	kubectl describe smoketests.katapult.org main-test  -n $(NAMESPACE)
-	kubectl get smoketests.katapult.org -n $(NAMESPACE) main-test
+	kubectl apply -f smoketest.yaml -n $(NAMESPACE)
+	kubectl describe smoketests.katapult.org carvel-test  -n $(NAMESPACE)
+	kubectl get smoketests.katapult.org -n $(NAMESPACE) carvel-test
+	
 	
 undeploy-sample:
-	kubectl patch smoketests.katapult.org main-test  -n $(NAMESPACE) -p '{"metadata": {"finalizers": []}}' --type merge
-	kubectl delete -f crd/500-maintest.yaml -n $(NAMESPACE)
+	kubectl patch smoketests.katapult.org carvel-test  -n $(NAMESPACE) -p '{"metadata": {"finalizers": []}}' --type merge
+	kubectl delete -f smoketest.yaml -n $(NAMESPACE)
 	
-undeploy-crd:
-	kubectl delete -f crd/300-smoketests.katapult.org-crd.yaml
+undeploy:
+	kubectl delete -f crd -n $(NAMESPACE)
 	kubectl api-resources --api-group katapult.org
 
 namespace:
@@ -36,7 +38,7 @@ namespace:
 force-delete-ns:
 	kubectl get namespace $(NAMESPACE) -o json > /tmp/smok.json
 	cat /tmp/smok.json | grep -v '"kubernetes' > /tmp/smoked.json
-	kubectl replace --raw "/api/v1/namespaces/smok/finalize" -f /tmp/smoked.json
+	kubectl replace --raw "/api/v1/namespaces/$(NAMESPACE)/finalize" -f /tmp/smoked.json
 	kubectl delete ns $(NAMESPACE)
 	
 
@@ -60,8 +62,11 @@ build-image:
     	-t "$(IMAGE)"  \
 		.	
 push: build-image
-	docker tag $(IMAGE_NAME) $(REGISTRY)/$(IMAGE)
+	docker tag $(IMAGE) $(REGISTRY)/$(IMAGE)
 	docker push $(REGISTRY)/$(IMAGE)
 
-run-image: build-image
+run-image: build-image 
 	docker run --rm  -v ~/.kube:/home/operator/.kube $(IMAGE)
+
+run-pushed-image: build-image push
+	docker run --rm  -v ~/.kube:/home/operator/.kube $(REGISTRY)/$(IMAGE)

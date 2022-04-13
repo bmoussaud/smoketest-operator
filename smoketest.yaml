@@ -1,7 +1,7 @@
 apiVersion: katapult.org/v1alpha1
 kind: SmokeTest
 metadata:
-  name: main-test  
+  name: carvel-test  
 spec: 
   url: https://carvel.dev/
   expectedResponseText: ytt
