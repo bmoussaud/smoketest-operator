@@ -16,6 +16,6 @@ spec:
     spec:
       serviceAccountName: smoketest-operator-account
       containers:
-      - name: the-only-one
+      - name: operator
         image: harbor.mytanzu.xyz/library/katapulted/smoketest-operator:0.0.1
         imagePullPolicy: Always

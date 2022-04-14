@@ -67,7 +67,7 @@ class Jobs:
 class K8SApi:
     def __init__(self):
         if 'KUBERNETES_PORT' in os.environ:
-        #if IN_CLUSTER:
+            # if IN_CLUSTER:
             print("----------------- LOAD  K8S_API IN CLUSTER----------------------")
             k8s_config.load_incluster_config()
         else:
@@ -113,10 +113,10 @@ def create(body, name, meta, spec, namespace, status, logger, **kwargs):
     kopf.adopt(doc)
     kopf.label(doc, {'parent-name': name}, nested=['spec.template'])
 
-    logger.error(pprint.pformat(doc))
+    logger.debug(pprint.pformat(doc))
 
     api_response = Jobs().create_job(namespace=namespace, doc=doc)
-    print("Job created. status='%s'" % str(api_response))
+    logger.debug("Job created. status='%s'" % str(api_response))
 
     job_description = f"Check if '{spec['url']}' is available"
     kopf.info(body, reason='Created',
@@ -147,40 +147,42 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
         logger.error(pprint.pformat(new_status))
         status = new_status['status']
 
+        conditions = []
+        if not 'conditions' in status:
+            status['conditions'] = conditions
+        conditions = status['conditions']
+
+        condition = {'type': phase,
+                     'message': message,
+                     'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")}
+
         if not 'startTime' in status:
             status['startTime'] = startTime
 
         if phase == 'Succeeded':
             status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
-            message = f"'{parent['spec']['url']}' is available"
-
-        if phase == 'Pending':
+            condition['message'] = f"'{parent['spec']['url']}' is available"
+            condition['type'] = 'Ready'
+            condition['status'] = 'True'
+        elif phase == 'Pending':
             if not 'attempts' in status:
                 status['attempts'] = 0
             status['attempts'] = status['attempts'] + 1
-        else:
-            conditions = []
-            if not 'conditions' in status:
-                status['conditions'] = conditions
-            conditions = status['conditions']
+        elif phase == 'Failed':
+            logger.error(f"query log {namespace}/{name}")
+            condition['message'] = Pods().read_pod_logs(namespace, name)
+            logger.error(f"query message {message}")
+            condition['type'] = 'Ready'
+            condition['status'] = 'False'
 
-            if phase == 'Failed':
-                logger.error(f"query log {namespace}/{name}")
-                message = Pods().read_pod_logs(namespace, name)
-                logger.error(f"query message {message}")
-
-            conditions.append({'status': 'True',
-                               'type': phase,
-                               'message': message,
-                               'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")})
-            status['conditions'] = conditions
+        conditions.append(condition)
+        status['conditions'] = conditions
 
         logger.error(f"event_in_a_pod update status with {status}")
-        logger.error("get_by_name")
         smoked = SmokeTest(logger).get_by_name(namespace=namespace,
                                                name=labels['parent-name'])
 
-        logger.error(smoked)
+        logger.debug(smoked)
         logger.error("update_status")
         SmokeTest(logger).update_status(namespace=namespace,
                                         name=labels['parent-name'], body=new_status)

@@ -4,7 +4,7 @@ metadata:
   name: carvel-test  
 spec: 
   url: https://carvel.dev/
-  expectedResponseText: ytt
+  expectedResponseText: benoitmoussaud
   retryIntervalSeconds: 1
   startDelaySeconds: 1
   showPageContent: true

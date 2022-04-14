@@ -32,6 +32,9 @@ spec:
       - jsonPath: .status.conditions[-1].message
         name: Message
         type: string
+      - name: Ready
+        type: string
+        jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
       schema:
         openAPIV3Schema:
           type: object
