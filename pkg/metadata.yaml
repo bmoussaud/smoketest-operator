@@ -1,0 +1,12 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: PackageMetadata
+metadata:
+  name: smoketest-operator.bmoussaud.github.com
+spec:
+  displayName: smoketest-operator
+  longDescription: Provide and Manage the smoketests.katapult.org resource.
+  shortDescription: Provide and Manage the smoketests.katapult.org resource.
+  providerName: Benoit Moussaud
+  maintainers:
+  - name: Benoit Moussaud
+  supportDescription: "Go to https://github.com/bmoussaud/smoketest-operator for documentation"

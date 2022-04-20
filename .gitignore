@@ -3,3 +3,10 @@ python-operator/__pycache__
 python-operator/jobrunner/__pycache__/
 *.pyc.vscode
 __pycache__/
+
+tmp
+pkg/.imgpkg
+pkg/config
+pkg/package.yaml
+repo
+config-dev/values.yml

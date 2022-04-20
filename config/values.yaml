@@ -1,0 +1,10 @@
+#@data/values
+---
+#! Set application name.
+APP: smoketest-operator
+
+#! Set target namespace.
+NAMESPACE: smoketest-operator
+
+#! Set application version.
+VERSION: latest
