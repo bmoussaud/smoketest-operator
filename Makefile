@@ -26,8 +26,8 @@ GIT_REV=$(shell git rev-parse --short HEAD)
 CARVEL_BINARIES := ytt kbld imgpkg kapp
 
 
-deploy: namespace
-	kubectl apply -f config -n $(NAMESPACE)
+deploy: 
+	ytt -f config | kubectl apply -f-
 	kubectl api-resources --api-group katapult.org
 	kubectl get deployments.apps -n $(NAMESPACE)
 	
@@ -36,13 +36,12 @@ deploy-sample:
 	kubectl describe smoketests.katapult.org carvel-test  -n $(NAMESPACE)
 	kubectl get smoketests.katapult.org -n $(NAMESPACE) carvel-test
 	
-	
 undeploy-sample:
 	kubectl patch smoketests.katapult.org carvel-test  -n $(NAMESPACE) -p '{"metadata": {"finalizers": []}}' --type merge
 	kubectl delete -f smoketest.yaml -n $(NAMESPACE)
 	
 undeploy:
-	kubectl delete -f config -n $(NAMESPACE)
+	ytt -f config | kubectl delete -f-
 	kubectl api-resources --api-group katapult.org
 
 namespace:
@@ -58,10 +57,10 @@ force-delete-ns:
 	kubectl delete ns $(NAMESPACE)
 	
 
-local-run:
+local-run: 
 	kopf run --log-format=full  smoketest-operator.py
 
-setup: local-run
+setup: 
 	pip3 install --upgrade kopf 
 	pip3 install --upgrade stringcase 
 	pip3 install --upgrade kubernetes
@@ -89,10 +88,7 @@ push-image: build-image
 	docker push $(APP_IMAGE):$(APP_VERSION)
 
 run-image: build-image 
-	docker run -i --rm  -v ~/.kube:/home/operator/.kube $(IMAGE)
-
-run-pushed-image: build-image push
-	docker run -i --rm  -v ~/.kube:/home/operator/.kube $(REGISTRY)/$(IMAGE)
+	docker run -i --rm  -v ~/.kube:/home/operator/.kube $(APP_IMAGE)
 
 check-carvel:
 	$(foreach exec,$(CARVEL_BINARIES),\

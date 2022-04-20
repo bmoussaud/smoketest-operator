@@ -171,9 +171,10 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
         elif phase == 'Failed':
             logger.error(f"query log {namespace}/{name}")
             condition['message'] = Pods().read_pod_logs(namespace, name)
-            logger.error(f"query message {message}")
+            logger.error(f"read_pod_logs {condition['message']}")
             condition['type'] = 'Ready'
             condition['status'] = 'False'
+            status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         conditions.append(condition)
         status['conditions'] = conditions
@@ -202,11 +203,10 @@ def update(body, name, meta, spec, namespace, status, logger, **kwargs):
 @kopf.on.delete('smoketests')
 def delete_smoketest(name, namespace, logger, **kwargs):
     logger.error(f"delete smoke test {name}")
-    job_name = get_job_name(name)
-    logger.error(f"job name is {job_name}")
-
-    api_response = Jobs().delete_job(namespace, job_name)
-    print("Job deleted. status='%s'" % str(api_response.status))
+    #job_name = get_job_name(name)
+    #logger.error(f"job name is {job_name}")
+    #api_response = Jobs().delete_job(namespace, job_name)
+    #print("Job deleted. status='%s'" % str(api_response.status))
 
 
 @kopf.on.event('jobs',  labels={'parent-name': kopf.PRESENT})
