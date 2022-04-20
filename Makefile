@@ -92,8 +92,6 @@ run-image: build-image
 run-pushed-image: build-image push
 	docker run -i --rm  -v ~/.kube:/home/operator/.kube $(REGISTRY)/$(IMAGE)
 
-	
-
 check-carvel:
 	$(foreach exec,$(CARVEL_BINARIES),\
 		$(if $(shell which $(exec)),,$(error "'$(exec)' not found. Carvel toolset is required. See instructions at https://carvel.dev/#install")))
