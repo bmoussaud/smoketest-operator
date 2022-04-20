@@ -72,6 +72,7 @@ clean:
 build-image:
 	ytt -f package.tpl.yaml -v app.version=$(APP_VERSION) -v "releaseDate=$(BUILD_DATE)" > pkg/package.yaml	
 	rm -rf pkg/config pkg/.imgpkg && cp -a config pkg && cat config/values.yaml | sed "s/VERSION: latest/VERSION: ${APP_VERSION}/" > pkg/config/values.yaml
+	@printf "`tput bold`= Build Image ${APP_IMAGE} $@`tput sgr0`\n"	
 	docker build --label org.label-schema.build-date="$(BUILD_DATE)" \
 		--label org.label-schema.vcs-ref=$(GIT_REV) \
     	--label org.label-schema.vcs-url="https://github.com/bmoussaud/smoketest-operator" \
@@ -97,7 +98,6 @@ check-carvel:
 		$(if $(shell which $(exec)),,$(error "'$(exec)' not found. Carvel toolset is required. See instructions at https://carvel.dev/#install")))
 
 push: check-carvel build-image push-image # Push packages.	
-
 	@printf "`tput bold`= Generate the PKG Image ${PKG_IMAGE} $@`tput sgr0`\n"	
 	mkdir pkg/.imgpkg && ytt -f pkg/config | kbld -f- --imgpkg-lock-output pkg/.imgpkg/images.yml && \
 		imgpkg push --bundle ${PKG_IMAGE}:${APP_VERSION} --file pkg
