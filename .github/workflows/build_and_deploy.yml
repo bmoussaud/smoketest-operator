@@ -22,6 +22,9 @@ jobs:
       - uses: vmware-tanzu/carvel-setup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: buildpacks/github-actions/setup-pack@v4.4.2
+        with:
+          pack-version: 0.23.0
       - uses: actions/checkout@v2            
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
