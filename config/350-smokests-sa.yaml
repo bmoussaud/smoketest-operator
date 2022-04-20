@@ -1,8 +1,9 @@
+#@ load("@ytt:data", "data")
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  namespace: smoketest-operator
+  namespace: #@ data.values.NAMESPACE
   name: smoketest-operator-account
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -32,6 +33,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:  
   name: smoketest-operator-role-namespaced
+  namespace: #@ data.values.NAMESPACE
 rules:  
   - apiGroups: [katapult.org]
     resources: [smoketests]
@@ -62,12 +64,12 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: smoketest-operator-account
-    namespace: smoketest-operator
+    namespace: #@ data.values.NAMESPACE
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  namespace: smoketest-operator
+  namespace: #@ data.values.NAMESPACE
   name: smoketest-operator-rolebinding-namespaced
 roleRef:
   apiGroup: rbac.authorization.k8s.io

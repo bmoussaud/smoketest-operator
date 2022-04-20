@@ -1,0 +1,2 @@
+#! Set target namespace.
+NAMESPACE: smoketest-operator
