@@ -70,7 +70,7 @@ clean:
 	rm -rf target pkg/.imgpkg pkg/config pkg/package.yaml repo
 	
 docker-build:
-	docker build . --file Dockerfile --tag my-image-name:$(BUILD_DATE)
+	docker build . --file Dockerfile --build-arg VERSION="$(APP_VERSION)" --tag my-image-name:$(APP_VERSION)
 
 build-image:
 	ytt -f package.tpl.yaml -v app.version=$(APP_VERSION) -v "releaseDate=$(BUILD_DATE)" > pkg/package.yaml	
