@@ -43,25 +43,28 @@ Edit this file accordingly.
 Deploy the package, using the version you have installed:
 
 ```shell
-tanzu package install kpack-viz --package-name smoketest-operator.bmoussaud.github.com --version 0.1.0-dev  -n tanzu-package-repo-global -f my-values.yaml
+tanzu package install smoketest-operator --package-name smoketest-operator.bmoussaud.github.com --version 0.1.0-dev  -n tanzu-package-repo-global -f my-values.yaml
 ```
 
 Check the status of the deployed package
 ```shell
-tanzu package installed get kpack-viz -n tanzu-package-repo-global
+tanzu package installed get smoketest-operator -n tanzu-package-repo-global
 ```
 When the package install is done, note there's a new namespace accordingly to the `my-values.yaml` file
 
-## Uninstall
+### Package uninstall
 
 ```shell
-tanzu package installed delete kpack-viz -n tanzu-package-repo-global
+tanzu package installed delete smoketest-operator -n tanzu-package-repo-global
 tanzu package repository delete smoketest-operator-repo -n tanzu-package-repo-global
 ```
 
 
-## Setup
 
+
+## Resources
+
+### Links
 https://github.com/gbaeke/kopf-example
 https://blog.baeke.info/2020/01/26/writing-a-kubernetes-operator-with-kopf/
 https://kopf.readthedocs.io/
@@ -69,26 +72,12 @@ https://github.com/nolar/kopf
 
 https://pykube.readthedocs.io/en/latest/index.html
 
-# VIDEO
-https://www.youtube.com/watch?v=vkhTdaAtcRE
-
-About CRD format:
+* About CRD format:
 https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md
 https://github.com/vmware-tanzu/carvel-kapp/blob/develop/pkg/kapp/resourcesmisc/api_extensions_vx_crd.go
 https://docs.okd.io/latest/rest_api/extension_apis/customresourcedefinition-apiextensions-k8s-io-v1.html
 
-## ERRORS
 
-if
+### VIDEO
+https://www.youtube.com/watch?v=vkhTdaAtcRE
 
-```python
-
-aiohttp.client_exceptions.ClientResponseError: 503, message='Service Unavailable', url=URL('https://127.0.0.1:6443/apis/metrics.k8s.io/v1beta1')
-
-```
-
-then
-
-```bash
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-```

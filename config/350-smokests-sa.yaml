@@ -13,8 +13,7 @@ metadata:
 rules:  
   - apiGroups: [katapult.org]
     resources: [smoketests]
-    verbs: [list, create, update, delete, patch, watch, get]
-  # Framework: runtime observation of namespaces & CRDs (addition/deletion).
+    verbs: [list, create, update, delete, patch, watch, get]  
   - apiGroups: [apiextensions.k8s.io]
     resources: [customresourcedefinitions]
     verbs: [list, watch]
@@ -23,8 +22,7 @@ rules:
     verbs: [list, watch]  
   - apiGroups: ["",networking.k8s.io, app, extensions, batch]      
     resources: [configmaps,ingresses, services,deployments,secrets,replicasets,pods, jobs]    
-    verbs: [list, create,update,delete,patch,watch,get]
-  # Framework: admission webhook configuration management.
+    verbs: [list, create,update,delete,patch,watch,get]  
   - apiGroups: [admissionregistration.k8s.io/v1, admissionregistration.k8s.io/v1beta1]
     resources: [validatingwebhookconfigurations, mutatingwebhookconfigurations]
     verbs: [create, patch] 
@@ -37,8 +35,7 @@ metadata:
 rules:  
   - apiGroups: [katapult.org]
     resources: [smoketests]
-    verbs: [list, create, update, delete, patch, watch, get]
-  # Framework: runtime observation of namespaces & CRDs (addition/deletion).
+    verbs: [list, create, update, delete, patch, watch, get]  
   - apiGroups: [apiextensions.k8s.io]
     resources: [customresourcedefinitions]
     verbs: [list, watch]
@@ -47,8 +44,7 @@ rules:
     verbs: [list, watch]  
   - apiGroups: ["",networking.k8s.io, app, extensions, batch]      
     resources: [configmaps,ingresses, services,deployments,secrets,replicasets,pods, jobs]    
-    verbs: [list, create,update,delete,patch,watch,get]
-  # Framework: admission webhook configuration management.
+    verbs: [list, create,update,delete,patch,watch,get]  
   - apiGroups: [admissionregistration.k8s.io/v1, admissionregistration.k8s.io/v1beta1]
     resources: [validatingwebhookconfigurations, mutatingwebhookconfigurations]
     verbs: [create, patch] 
