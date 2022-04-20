@@ -2,6 +2,26 @@
 
 ## Running the app
 
+```shell
+kubectl apply -f smoketest.yaml -n default
+```
+
+```shell
+➜ kubectl tree smoketest.katapult.org carvel-test -n default                                                                                                   
+NAMESPACE  NAME                                      READY  REASON  AGE
+default    SmokeTest/carvel-test                     -              6s
+default    └─Job/job-smoke-test-carvel-test          -              6s
+default      └─Pod/job-smoke-test-carvel-test-7mz2h  True           6s
+```
+
+```shell
+➜ kubectl get smoketest.katapult.org carvel-test -n default                                                                                                    
+NAME          ATTEMPTS   STATUS   STARTTIME   COMPLETIONTIME   MESSAGE                              READY
+carvel-test   1          Ready    40s         27s              'https://carvel.dev/' is available   True
+```
+
+## Install the operator
+
 ### Repository install with Internet connectivity
 
 First, let's add a new repository:
@@ -55,8 +75,8 @@ When the package install is done, note there's a new namespace accordingly to th
 ### Package uninstall
 
 ```shell
-tanzu package installed delete smoketest-operator -n tanzu-package-repo-global
-tanzu package repository delete smoketest-operator-repo -n tanzu-package-repo-global
+tanzu package installed delete smoketest-operator -n tanzu-package-repo-global -y
+tanzu package repository delete smoketest-operator-repo -n tanzu-package-repo-global -y
 ```
 
 
