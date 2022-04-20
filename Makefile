@@ -77,7 +77,7 @@ build-image:
     	--label org.label-schema.vcs-url="https://github.com/bmoussaud/smoketest-operator" \
     	--label org.label-schema.version="$(SOURCE_BRANCH)" \
     	--label org.label-schema.schema-version="1.0" \
-		--label org.opencontainers.image.source="https://github.com/bmoussaud/smoketest-operator"
+		--label org.opencontainers.image.source="https://github.com/bmoussaud/smoketest-operator" \
     	--build-arg VERSION="$(APP_VERSION)" \
     	-f Dockerfile \
     	-t "$(APP_IMAGE)"  \
