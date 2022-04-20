@@ -72,7 +72,7 @@ clean:
 build-image:
 	ytt -f package.tpl.yaml -v app.version=$(APP_VERSION) -v "releaseDate=$(BUILD_DATE)" > pkg/package.yaml	
 	rm -rf pkg/config pkg/.imgpkg && cp -a config pkg && cat config/values.yaml | sed "s/VERSION: latest/VERSION: ${APP_VERSION}/" > pkg/config/values.yaml
-	@printf "`tput bold`= Build Image ${APP_IMAGE} $@`tput sgr0`\n"	
+	@printf "`tput bold`= Build Image ${APP_IMAGE}`tput sgr0`\n"	
 	docker build --label org.label-schema.build-date="$(BUILD_DATE)" \
 		--label org.label-schema.vcs-ref=$(GIT_REV) \
     	--label org.label-schema.vcs-url="https://github.com/bmoussaud/smoketest-operator" \
@@ -82,8 +82,9 @@ build-image:
     	--build-arg VERSION="$(APP_VERSION)" \
     	-f Dockerfile \
     	-t "$(APP_IMAGE)"  \
-		.	
+		.	 
 push-image: build-image
+	@printf "`tput bold`= Push Image ${APP_IMAGE}:${APP_VERSION}`tput sgr0`\n"	
 	docker tag $(APP_IMAGE) $(APP_IMAGE):$(APP_VERSION)
 	docker push $(APP_IMAGE):$(APP_VERSION)
 
