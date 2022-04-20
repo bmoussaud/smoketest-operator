@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v3         
       - name: Build the Docker image
       # run: docker build . --build-arg VERSION="0.1.0-dev" -f "." -t "ghcr.io/bmoussaud/smoketest-operator"
-        run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+        run: make docker-build
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}

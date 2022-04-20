@@ -69,6 +69,9 @@ setup: local-run
 clean:
 	rm -rf target pkg/.imgpkg pkg/config pkg/package.yaml repo
 	
+docker-build:
+	docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+
 build-image:
 	ytt -f package.tpl.yaml -v app.version=$(APP_VERSION) -v "releaseDate=$(BUILD_DATE)" > pkg/package.yaml	
 	rm -rf pkg/config pkg/.imgpkg && cp -a config pkg && cat config/values.yaml | sed "s/VERSION: latest/VERSION: ${APP_VERSION}/" > pkg/config/values.yaml
@@ -78,7 +81,7 @@ build-image:
     	--label org.label-schema.version="$(SOURCE_BRANCH)" \
     	--label org.label-schema.schema-version="1.0" \
     	--build-arg VERSION="$(APP_VERSION)" \
-    	-f "." \
+    	-f Dockerfile \
     	-t "$(APP_IMAGE)"  \
 		.	
 push-image: build-image
