@@ -30,6 +30,7 @@ deploy:
 	ytt -f config | kubectl apply -f-
 	kubectl api-resources --api-group katapult.org
 	kubectl get deployments.apps -n $(NAMESPACE)
+	kubectl delete deployments.apps smoketest-operator -n $(NAMESPACE)
 	
 deploy-sample:	
 	kubectl apply -f smoketest.yaml -n $(NAMESPACE)

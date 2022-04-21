@@ -17,28 +17,16 @@ spec:
       served: true
       storage: true
       additionalPrinterColumns:
-      - jsonPath: .status.attempts
-        name: Attempts
-        type: integer
-      - jsonPath: .status.conditions[-1].type
-        name: Status
-        type: string      
-      - jsonPath: .status.startTime
-        name: StartTime
-        type: date
-      - jsonPath: .status.completionTime
-        name: CompletionTime
-        type: date
-      - jsonPath: .status.conditions[-1].message
-        name: Message
-        type: string
       - name: Ready
+        type: string        
+        jsonPath: .status.conditions[?(@.type=='Ready')].status
+      - name: Reason
+        jsonPath: .status.conditions[?(@.type=='Ready')].reason        
         type: string
-        jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
       schema:
         openAPIV3Schema:
           type: object
-          properties:
+          properties:            
             status:
               type: object
               x-kubernetes-preserve-unknown-fields: true
@@ -53,20 +41,12 @@ spec:
                       status:
                         type: string
                       reason:
-                        type: string
-                      message:
-                        type: string
+                        type: string                      
                       type:
                         type: string   
                       lastTransitionTime:
                         type: string  
-                        format: dateTime                        
-                startTime:
-                  type: string
-                  format: dateTime              
-                completionTime:
-                  type: string  
-                  format: dateTime
+                        format: dateTime                                        
                 attempts:
                   type: integer
                   description: number of attempts              

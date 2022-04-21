@@ -134,7 +134,6 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
     startTime = status.get('startTime')
     logger.error(f"smoke test '{labels['parent-name']}'='{phase}'")
     try:
-        message = ""
         parent = SmokeTest(logger).get_by_name(
             namespace=namespace, name=labels['parent-name'])
 
@@ -147,21 +146,13 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
         logger.error(pprint.pformat(new_status))
         status = new_status['status']
 
-        conditions = []
-        if not 'conditions' in status:
-            status['conditions'] = conditions
-        conditions = status['conditions']
-
+             
+        status['conditions'] = [] 
         condition = {'type': phase,
-                     'message': message,
                      'lastTransitionTime': started.strftime("%Y-%m-%dT%H:%M:%SZ")}
 
-        if not 'startTime' in status:
-            status['startTime'] = startTime
-
         if phase == 'Succeeded':
-            status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
-            condition['message'] = f"'{parent['spec']['url']}' is available"
+            condition['reason'] = f"'{parent['spec']['url']}' is available"
             condition['type'] = 'Ready'
             condition['status'] = 'True'
         elif phase == 'Pending':
@@ -170,14 +161,12 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
             status['attempts'] = status['attempts'] + 1
         elif phase == 'Failed':
             logger.error(f"query log {namespace}/{name}")
-            condition['message'] = Pods().read_pod_logs(namespace, name)
-            logger.error(f"read_pod_logs {condition['message']}")
+            condition['reason'] = Pods().read_pod_logs(namespace, name)
+            logger.error(f"read_pod_logs {condition['reason']}")
             condition['type'] = 'Ready'
             condition['status'] = 'False'
-            status['completionTime'] = started.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        conditions.append(condition)
-        status['conditions'] = conditions
+        status['conditions'].append(condition)        
 
         logger.error(f"event_in_a_pod update status with {status}")
         smoked = SmokeTest(logger).get_by_name(namespace=namespace,
@@ -197,16 +186,16 @@ def event_in_a_pod(labels, status, name, namespace, started, logger, **kwargs):
 def update(body, name, meta, spec, namespace, status, logger, **kwargs):
     logger.error(f"update smoke test {name}")
     delete_smoketest(name, namespace, logger)
+    job_name = get_job_name(name)
+    logger.error(f"job name is {job_name}")
+    api_response = Jobs().delete_job(namespace, job_name)
+    print("Job deleted. status='%s'" % str(api_response.status))
     create(body, name, meta, spec, namespace, status, logger)
 
 
 @kopf.on.delete('smoketests')
 def delete_smoketest(name, namespace, logger, **kwargs):
     logger.error(f"delete smoke test {name}")
-    #job_name = get_job_name(name)
-    #logger.error(f"job name is {job_name}")
-    #api_response = Jobs().delete_job(namespace, job_name)
-    #print("Job deleted. status='%s'" % str(api_response.status))
 
 
 @kopf.on.event('jobs',  labels={'parent-name': kopf.PRESENT})
