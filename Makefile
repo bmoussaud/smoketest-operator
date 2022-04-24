@@ -1,5 +1,5 @@
 APP:=smoketest-operator
-APP_VERSION := 0.1.0-dev
+APP_VERSION := 0.2.0-dev
 APP_IMAGE  := ghcr.io/bmoussaud/$(APP)
 PKG_IMAGE := ghcr.io/bmoussaud/$(APP)-package
 REPO_IMAGE := ghcr.io/bmoussaud/$(APP)-repo
@@ -7,24 +7,8 @@ REPO_IMAGE := ghcr.io/bmoussaud/$(APP)-repo
 NAMESPACE=smoketest-operator
 
 BUILD_DATE := $(shell date +"%Y-%m-%dT%TZ")
-
-
-
-SOURCE_BRANCH=v0.0.1
-IMAGE_NAME=katapulted/smoketest-operator
-IMAGE_VERSION=0.0.1
-REGISTRY=harbor.mytanzu.xyz/library
-
-
-
-
-
-IMAGE=$(IMAGE_NAME):$(IMAGE_VERSION)
-
 GIT_REV=$(shell git rev-parse --short HEAD)
-
 CARVEL_BINARIES := ytt kbld imgpkg kapp
-
 
 deploy: 
 	ytt -f config | kubectl apply -f-
@@ -76,7 +60,7 @@ build-image:
 	docker build --label org.label-schema.build-date="$(BUILD_DATE)" \
 		--label org.label-schema.vcs-ref=$(GIT_REV) \
     	--label org.label-schema.vcs-url="https://github.com/bmoussaud/smoketest-operator" \
-    	--label org.label-schema.version="$(SOURCE_BRANCH)" \
+    	--label org.label-schema.version="$(APP_VERSION)" \
     	--label org.label-schema.schema-version="1.0" \
 		--label org.opencontainers.image.source="https://github.com/bmoussaud/smoketest-operator" \
     	--build-arg VERSION="$(APP_VERSION)" \
