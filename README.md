@@ -46,7 +46,7 @@ Check that this app is available as a package:
 tanzu package available list smoketest-operator.bmoussaud.github.com -n tanzu-package-repo-global
 - Retrieving package versions for smoketest-operator.bmoussaud.github.com...
   NAME                                     VERSION    RELEASED-AT
-  smoketest-operator.bmoussaud.github.com  0.1.0-dev  2022-04-20 19:37:19 +0200 CEST
+  smoketest-operator.bmoussaud.github.com  0.2.0-dev  2022-04-24 15:47:19 +0200 CEST
 ```
 
 Keep the package version handy - you'll need it when it comes to package deployment.
@@ -63,7 +63,7 @@ Edit this file accordingly.
 Deploy the package, using the version you have installed:
 
 ```shell
-tanzu package install smoketest-operator --package-name smoketest-operator.bmoussaud.github.com --version 0.1.0-dev  -n tanzu-package-repo-global -f my-values.yaml
+tanzu package install smoketest-operator --package-name smoketest-operator.bmoussaud.github.com --version 0.2.0-dev  -n tanzu-package-repo-global -f my-values.yaml
 ```
 
 Check the status of the deployed package

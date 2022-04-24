@@ -11,6 +11,8 @@ kind: ClusterRole
 metadata:
   name: smoketest-operator-role-cluster
 rules:  
+  - nonResourceURLs: ["/api", "/api/*"] 
+    verbs: ["get", "post"]
   - apiGroups: [katapult.org]
     resources: [smoketests]
     verbs: [list, create, update, delete, patch, watch, get]  
@@ -32,7 +34,7 @@ kind: Role
 metadata:  
   name: smoketest-operator-role-namespaced
   namespace: #@ data.values.NAMESPACE
-rules:  
+rules:    
   - apiGroups: [katapult.org]
     resources: [smoketests]
     verbs: [list, create, update, delete, patch, watch, get]  

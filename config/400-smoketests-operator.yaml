@@ -20,5 +20,5 @@ spec:
       serviceAccountName: smoketest-operator-account
       containers:
       - name: operator
-        image: harbor.mytanzu.xyz/library/katapulted/smoketest-operator:0.0.1
+        image: ghcr.io/bmoussaud/smoketest-operator:0.2.0-dev
         imagePullPolicy: Always

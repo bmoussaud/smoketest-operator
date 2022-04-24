@@ -11,6 +11,7 @@ GIT_REV=$(shell git rev-parse --short HEAD)
 CARVEL_BINARIES := ytt kbld imgpkg kapp
 
 deploy: 
+#kubectl create clusterrolebinding cluster-system-anonymous --clusterrole=cluster-admin --user=system:anonymous
 	ytt -f config | kubectl apply -f-
 	kubectl api-resources --api-group katapult.org
 	kubectl get deployments.apps -n $(NAMESPACE)
