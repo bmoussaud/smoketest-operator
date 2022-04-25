@@ -1,0 +1,43 @@
+apiVersion: carto.run/v1alpha1
+kind: ClusterDelivery
+metadata:  
+  name: smoke-micropets-delivery  
+spec:
+  params:
+  - default: micropets
+    name: application
+  - default: aws/prod-1
+    name: environment
+  resources:
+  - name: gitops-provider
+    templateRef:
+      kind: ClusterSourceTemplate
+      name: gitops-source
+  - name: deployment-rules-provider
+    templateRef:
+      kind: ClusterSourceTemplate
+      name: deployment-source
+  - deployment:
+      resource: micropet-app-deploy
+    name: deployment-provider
+    params:
+    - default: kapp/service
+      name: deployment_rules
+    sources:
+    - name: gitops
+      resource: gitops-provider
+    - name: rules
+      resource: deployment-rules-provider
+    templateRef:
+      kind: ClusterDeploymentTemplate
+      name: micropet-app-deploy
+  - name: smoketest-provider    
+    templateRef:
+      kind: ClusterTemplate
+      name: smoke-micropets-smoke-test-template     
+    configs:
+    - name: deployment
+      resource: deployment-provider
+  selector:
+    app.tanzu.vmware.com/workload-type: micropets-delivery-smoke
+

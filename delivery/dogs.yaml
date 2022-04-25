@@ -1,0 +1,19 @@
+apiVersion: carto.run/v1alpha1
+kind: Deliverable
+metadata:
+  name: dogs
+  namespace: micropets-supplychain
+  labels:
+    app.tanzu.vmware.com/workload-type: micropets-delivery-smoke    
+spec:
+  serviceAccountName: cartographer-deliverable-sa
+  source:
+    git:
+      url: http://github.com/bmoussaud/micropets-app-gitops.git
+      ref:
+        branch: main
+  params:
+  - name: environment
+    value: aws/aws-north
+  - name: application
+    value: micropets/20220329

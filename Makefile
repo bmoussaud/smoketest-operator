@@ -91,3 +91,13 @@ push: check-carvel build-image push-image # Push packages.
 		imgpkg push --bundle ${REPO_IMAGE}:latest --file repo
 
 
+deploy-package:
+	tanzu package repository add smoketest-operator-repo --url ghcr.io/bmoussaud/smoketest-operator-repo:latest -n tanzu-package-repo-global 
+	tanzu package repository list -n tanzu-package-repo-global
+	tanzu package repository get smoketest-operator-repo -n tanzu-package-repo-global
+	tanzu package available list smoketest-operator.bmoussaud.github.com -n tanzu-package-repo-global
+	tanzu package install smoketest-operator --package-name smoketest-operator.bmoussaud.github.com --version 0.2.0-dev  -n tanzu-package-repo-global -f my-values.yaml
+
+undeploy-package:
+	tanzu package installed delete smoketest-operator -n tanzu-package-repo-global -y
+	tanzu package repository delete smoketest-operator-repo -n tanzu-package-repo-global -y
