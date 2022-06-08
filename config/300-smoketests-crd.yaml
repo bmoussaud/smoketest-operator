@@ -3,8 +3,8 @@ kind: CustomResourceDefinition
 metadata:
   name: smoketests.katapult.org
 spec:  
+  preserveUnknownFields: false
   group: katapult.org
-  scope: Namespaced
   names:
     kind: SmokeTest
     listKind: smoketestList
@@ -12,6 +12,7 @@ spec:
     singular: smoketest
     shortNames:
       - st
+  scope: Namespaced
   versions:
     - name: v1alpha1
       served: true
@@ -23,35 +24,24 @@ spec:
       - name: Reason
         jsonPath: .status.conditions[?(@.type=='Ready')].reason        
         type: string
+      subresources:
+        status: {}
       schema:
         openAPIV3Schema:
-          type: object
-          properties:            
-            status:
-              type: object
-              x-kubernetes-preserve-unknown-fields: true
-              properties:                
-                conditions:
-                  type: array
-                  #x-kubernetes-patch-merge-key: name
-                  #x-kubernetes-patch-strategy: merge
-                  items:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                      reason:
-                        type: string                      
-                      type:
-                        type: string   
-                      lastTransitionTime:
-                        type: string  
-                        format: dateTime                                        
-                attempts:
-                  type: integer
-                  description: number of attempts              
-            spec:
-              type: object
+          description: SmokeTest operator API  
+          type: object         
+          properties: 
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string    
+            metadata:
+              type: object       
+            spec:  
+              type: object         
+              description: SmokeTestSpec defines the desired state of SmokeTest
               properties:
                 url:
                   description: URL will be tested
@@ -75,4 +65,32 @@ spec:
                 showPageContent:
                   description: Display the output of the content of tested url.
                   type: boolean
+            status:
+              type: object
+              description: SmokeTestStatus defines the observed state of SmokeTest
+              x-kubernetes-preserve-unknown-fields: true
+              properties:                
+                conditions:
+                  type: array                  
+                  items:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      reason:
+                        type: string                      
+                      type:
+                        type: string   
+                      lastTransitionTime:
+                        type: string  
+                        format: dateTime                                        
+                      attempts:
+                        type: integer
+                        description: number of attempts              
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
 
