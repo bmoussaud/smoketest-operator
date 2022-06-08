@@ -15,4 +15,4 @@ spec:
       startDelaySeconds: 1
       showPageContent: true
       timeout: 1
-      maxRetries: 1
+      maxRetries: 1 
